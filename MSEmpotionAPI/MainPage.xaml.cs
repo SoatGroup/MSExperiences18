@@ -26,5 +26,28 @@ namespace MSEmpotionAPI
         {
             this.InitializeComponent();
         }
+        
+        /// <summary>
+        /// Navigate pages
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if ((e.AddedItems[0] as ListViewItem).Tag.ToString().Equals("0"))
+            {
+                navSplitView.IsPaneOpen = !navSplitView.IsPaneOpen;
+            }
+            if ((e.AddedItems[0] as ListViewItem).Tag.ToString().Equals("1"))
+            {
+                frmPages.Navigate(typeof(GamePage));
+                navSplitView.IsPaneOpen = false;
+            }
+            if ((e.AddedItems[0] as ListViewItem).Tag.ToString().Equals("2"))
+            {
+                frmPages.Navigate(typeof(FacePage));
+                navSplitView.IsPaneOpen = false;
+            }
+        }
     }
 }

@@ -1,0 +1,111 @@
+﻿<Page
+    x:Class="MSEmpotionAPI.GamePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:MSEmpotionAPI"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"></RowDefinition>
+            <RowDefinition Height="auto"></RowDefinition>
+            <RowDefinition Height="auto"></RowDefinition>
+            <RowDefinition Height="auto"></RowDefinition>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0">
+            <CaptureElement x:Name="previewElement" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
+            <!--<Canvas Name="PreviewCanvas"
+                HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                Height="{Binding ElementName=previewElement, Path=ActualHeight}"
+                Width="{Binding ElementName=previewElement, Path=ActualWidth}"
+                Margin="0,0,0,0">
+            </Canvas>-->
+        </Grid>
+
+        <Grid Grid.Row="1" Grid.Column="1">
+            <Button x:Name="btnTakePhoto" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Content="Take Photo" Margin="10, 14, 10, 14" Click="takePhoto_Click" />
+            <!--<Canvas Name="cvasMain" RelativePanel.AlignLeftWithPanel="True"
+                    RelativePanel.AlignRightWithPanel="True"
+                    RelativePanel.AlignTopWithPanel="True"
+                    RelativePanel.AlignBottomWithPanel="True"
+                    SizeChanged="cvasMain_SizeChanged">
+                <Popup Name="emotionData" IsOpen="False" IsLightDismissEnabled="True">
+
+                </Popup>
+            </Canvas>-->
+        </Grid>
+
+        <ProgressRing Name="ringLoading" Grid.Row="0" Width="60" Height="60" Foreground="WhiteSmoke">
+
+        </ProgressRing>
+
+        <Pivot Grid.Row="2" Padding="1,1,1,10">
+            <Pivot.Items>
+                <PivotItem>
+                    <PivotItem.Header>
+                        <TextBlock FontSize="16">Emotions</TextBlock>
+                    </PivotItem.Header>
+                    <PivotItem.Content>
+                        <Grid Name="gridEmotions">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="*"></RowDefinition>
+                                <RowDefinition Height="*"></RowDefinition>
+                                <RowDefinition Height="*"></RowDefinition>
+                                <RowDefinition Height="*"></RowDefinition>
+                                <RowDefinition Height="*"></RowDefinition>
+                                <RowDefinition Height="*"></RowDefinition>
+                                <RowDefinition Height="*"></RowDefinition>
+                                <RowDefinition Height="*"></RowDefinition>
+                                <RowDefinition Height="*"></RowDefinition>
+                                <RowDefinition Height="*"></RowDefinition>
+                                <RowDefinition Height="*"></RowDefinition>
+                                <RowDefinition Height="*"></RowDefinition>
+                                <RowDefinition Height="*"></RowDefinition>
+                                <RowDefinition Height="*"></RowDefinition>
+                                <RowDefinition Height="*"></RowDefinition>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="18"></ColumnDefinition>
+                                <ColumnDefinition Width="0.8*"></ColumnDefinition>
+                                <ColumnDefinition Width="1.25*"></ColumnDefinition>
+                                <ColumnDefinition Width="*"></ColumnDefinition>
+                                <ColumnDefinition Width="0.6*"></ColumnDefinition>
+                                <ColumnDefinition Width="1.3*"></ColumnDefinition>
+                                <ColumnDefinition Width="*"></ColumnDefinition>
+                                <ColumnDefinition Width="1.05*"></ColumnDefinition>
+                                <ColumnDefinition Width="1.05*"></ColumnDefinition>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock FontSize="11" Text="#" Grid.Row="0" Grid.Column="0" Padding="1"></TextBlock>
+                            <TextBlock FontSize="11" Text="anger" Grid.Row="0" Grid.Column="1"></TextBlock>
+                            <TextBlock FontSize="11" Text="contempt" Grid.Row="0" Grid.Column="2"></TextBlock>
+                            <TextBlock FontSize="11" Text="disgust" Grid.Row="0" Grid.Column="3"></TextBlock>
+                            <TextBlock FontSize="11" Text="fear" Grid.Row="0" Grid.Column="4"></TextBlock>
+                            <TextBlock FontSize="11" Text="happiness" Grid.Row="0" Grid.Column="5"></TextBlock>
+                            <TextBlock FontSize="11" Text="neutral" Grid.Row="0" Grid.Column="6"></TextBlock>
+                            <TextBlock FontSize="11" Text="sadness" Grid.Row="0" Grid.Column="7"></TextBlock>
+                            <TextBlock FontSize="11" Text="surprise" Grid.Row="0" Grid.Column="8"></TextBlock>
+                            <Border Grid.Row="1" Grid.ColumnSpan="9" Background="White" Height="0.5" Margin="0,5,0,5"></Border>
+
+                        </Grid>
+                    </PivotItem.Content>
+                </PivotItem>
+            </Pivot.Items>
+        </Pivot>
+        <RelativePanel Grid.Row="3" BorderThickness="0.5" BorderBrush="{ThemeResource SystemControlForegroundChromeMediumBrush}" >
+            <TextBlock VerticalAlignment="Center"                      
+                       Text="Picture Location"
+                       Padding="14,0,0,0"
+                       Name="txtLocation" 
+                       RelativePanel.AlignLeftWithPanel="True" 
+                       RelativePanel.AlignRightWithPanel="True" 
+                       RelativePanel.AlignBottomWithPanel="True"
+                       RelativePanel.AlignTopWithPanel="True"
+                       FontSize="16">
+            </TextBlock>
+        </RelativePanel>
+    </Grid>
+</Page>
