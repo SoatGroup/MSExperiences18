@@ -31,9 +31,11 @@ namespace MSEmpotionAPI
         //Face API Key
         string key_face = "34f95dfe9ef7460e9bfbd19987a5b6c3";
         string face_apiroot = "https://westeurope.api.cognitive.microsoft.com/face/v1.0";
-
-        Size size_image;
         Face[] faces;
+
+        private int _startTime;
+        private int _seconds = 5;
+        private DispatcherTimer _timer = new DispatcherTimer();
 
         private MediaCapture mediaCapture;
         private StorageFile photoFile;
@@ -81,13 +83,44 @@ namespace MSEmpotionAPI
                 }
                 finally
                 {
-                    btnTakePhoto.IsEnabled = false;
                     txtLocation.Text += "\nCheck if camera is diconnected. Try re-launching the app";
                 }
             });
         }
+        private void StartTimer()
+        {
+            _timer.Interval = TimeSpan.FromMilliseconds(500);
+            _timer.Tick += Timer_Tick;
+            _startTime = Environment.TickCount;
+            _timer.Start();
+        }
+        private async void Timer_Tick(object sender, object e)
+        {
+            var remainingSeconds = _seconds - TimeSpan.FromMilliseconds(Environment.TickCount - _startTime).Seconds;
 
-        private async void takePhoto_Click(object sender, RoutedEventArgs e)
+            if (remainingSeconds <= 0)
+            {
+                _timer.Stop();
+                _timer.Tick -= Timer_Tick;
+                timerText.Text = String.Empty;
+                // Flash screen
+                flashStoryboard.Begin();
+                // Capture Image
+                await TakePhotoAsync();
+            }
+            else
+            {
+                timerText.Text = remainingSeconds.ToString();
+            }
+
+        }
+
+        private void StartGame(object sender, RoutedEventArgs e)
+        {
+            StartTimer();
+        }
+
+        private async Task TakePhotoAsync()
         {
             try
             {

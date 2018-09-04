@@ -7,6 +7,20 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    
+    <Page.Resources>
+        <!-- Storyboard resource: Animates a rectangle's opacity. -->
+        <Storyboard x:Name="flashStoryboard">
+            <DoubleAnimationUsingKeyFrames
+                Storyboard.TargetName="flashRectangle"
+                Storyboard.TargetProperty="Opacity"
+                Duration="0:0:0.8" >
+                <LinearDoubleKeyFrame KeyTime="0:0:0.0" Value="0"/>
+                <LinearDoubleKeyFrame KeyTime="0:0:0.4" Value="1"/>
+                <LinearDoubleKeyFrame KeyTime="0:0:0.8" Value="0"/>
+            </DoubleAnimationUsingKeyFrames>
+        </Storyboard>
+    </Page.Resources>
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <Grid.RowDefinitions>
@@ -16,7 +30,7 @@
             <RowDefinition Height="auto"></RowDefinition>
         </Grid.RowDefinitions>
 
-        <Grid Grid.Row="0">
+        <Grid Grid.Row="0" Background="Black">
             <CaptureElement x:Name="previewElement" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"/>
             <!--<Canvas Name="PreviewCanvas"
                 HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
@@ -24,10 +38,21 @@
                 Width="{Binding ElementName=previewElement, Path=ActualWidth}"
                 Margin="0,0,0,0">
             </Canvas>-->
+            <TextBlock Name="timerText"
+                       FontSize="200"
+                       FontWeight="Bold"
+                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                       Foreground="WhiteSmoke"/>
         </Grid>
 
-        <Grid Grid.Row="1" Grid.Column="1">
-            <Button x:Name="btnTakePhoto" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Content="Take Photo" Margin="10, 14, 10, 14" Click="takePhoto_Click" />
+        <Grid Grid.Row="0">
+            <Rectangle x:Name="flashRectangle" Opacity="0"
+                       VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
+                       Fill="White"/>
+        </Grid>
+
+        <StackPanel Grid.Row="1" Grid.Column="1">
+            <Button x:Name="btnStartGame" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" Content="Take Photo" Margin="10, 14, 10, 14" Click="StartGame" />
             <!--<Canvas Name="cvasMain" RelativePanel.AlignLeftWithPanel="True"
                     RelativePanel.AlignRightWithPanel="True"
                     RelativePanel.AlignTopWithPanel="True"
@@ -37,7 +62,7 @@
 
                 </Popup>
             </Canvas>-->
-        </Grid>
+        </StackPanel>
 
         <ProgressRing Name="ringLoading" Grid.Row="0" Width="60" Height="60" Foreground="WhiteSmoke">
 
