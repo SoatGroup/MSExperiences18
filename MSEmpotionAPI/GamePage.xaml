@@ -16,8 +16,8 @@
                 Storyboard.TargetProperty="Opacity"
                 Duration="0:0:0.8" >
                 <LinearDoubleKeyFrame KeyTime="0:0:0.0" Value="0"/>
-                <LinearDoubleKeyFrame KeyTime="0:0:0.4" Value="1"/>
-                <LinearDoubleKeyFrame KeyTime="0:0:0.8" Value="0"/>
+                <LinearDoubleKeyFrame KeyTime="0:0:0.2" Value="1"/>
+                <LinearDoubleKeyFrame KeyTime="0:0:0.4" Value="0"/>
             </DoubleAnimationUsingKeyFrames>
         </Storyboard>
     </Page.Resources>
@@ -39,6 +39,7 @@
                 Margin="0,0,0,0">
             </Canvas>-->
             <TextBlock Name="timerText"
+                       Opacity=".5"
                        FontSize="200"
                        FontWeight="Bold"
                        HorizontalAlignment="Center" VerticalAlignment="Center"

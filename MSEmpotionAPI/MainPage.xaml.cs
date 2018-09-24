@@ -48,6 +48,26 @@ namespace MSEmpotionAPI
                 frmPages.Navigate(typeof(FacePage));
                 navSplitView.IsPaneOpen = false;
             }
+            if ((e.AddedItems[0] as ListViewItem).Tag.ToString().Equals("3"))
+            {
+                frmPages.Navigate(typeof(FindSimilarFacePage));
+                navSplitView.IsPaneOpen = false;
+            }
+            if ((e.AddedItems[0] as ListViewItem).Tag.ToString().Equals("4"))
+            {
+                frmPages.Navigate(typeof(FindSimilarCelebrityPage));
+                navSplitView.IsPaneOpen = false;
+            }
+            if ((e.AddedItems[0] as ListViewItem).Tag.ToString().Equals("5"))
+            {
+                frmPages.Navigate(typeof(FindSimilarGroupPage));
+                navSplitView.IsPaneOpen = false;
+            }
+            if ((e.AddedItems[0] as ListViewItem).Tag.ToString().Equals("6"))
+            {
+                frmPages.Navigate(typeof(FaceTrackingPage));
+                navSplitView.IsPaneOpen = false;
+            }
         }
     }
 }

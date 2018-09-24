@@ -2,6 +2,7 @@
 using Microsoft.ProjectOxford.Face.Contract;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -11,12 +12,11 @@ using Windows.Media.MediaProperties;
 using Windows.Storage;
 using Windows.Storage.Search;
 using Windows.Storage.Streams;
-using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
+using FaceApiProxy;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
 
@@ -25,7 +25,7 @@ namespace MSEmpotionAPI
     /// <summary>
     /// An empty page that can be used on its own or navigated to within a Frame.
     /// </summary>
-    public sealed partial class FacePage : Page
+    public sealed partial class FindSimilarFacePage : Page
     {
         //Face API Key
         string key_face = "34f95dfe9ef7460e9bfbd19987a5b6c3";
@@ -43,9 +43,19 @@ namespace MSEmpotionAPI
         private readonly string PHOTO_FILE_NAME = "photo.jpg";
         private bool isPreviewing;
 
-        public FacePage()
+        /// <summary>
+        /// Temporary stored large face list id.
+        /// </summary>
+        private string _largeFaceListId = Guid.NewGuid().ToString();
+        /// <summary>
+        /// Faces collection which will be used to find similar from
+        /// </summary>
+        private ObservableCollection<TrainedFace> _facesCollection = new ObservableCollection<TrainedFace>();
+
+        public FindSimilarFacePage()
         {
             this.InitializeComponent();
+            InitReferenceFaces();
             queryOptions = new QueryOptions(CommonFileQuery.OrderByName, mediaFileExtensions);
             queryOptions.FolderDepth = FolderDepth.Shallow;
             isPreviewing = false;
@@ -157,7 +167,6 @@ namespace MSEmpotionAPI
             btnTakePhoto.IsEnabled = false;
         }
 
-
         private string[] mediaFileExtensions = {
             // picture
             ".jpg",
@@ -239,7 +248,6 @@ namespace MSEmpotionAPI
                     txtFileName.Text = Picker_SelectedFile.Path;
                     var stream = await Picker_SelectedFile.OpenAsync(Windows.Storage.FileAccessMode.Read);
                     var stream_send = stream.CloneStream();
-                    var stream_send2 = stream.CloneStream();
                     var image = new BitmapImage();
                     image.SetSource(stream);
                     imgPhoto.Source = image;
@@ -250,23 +258,65 @@ namespace MSEmpotionAPI
                     //Face service
                     FaceServiceClient f_client = new FaceServiceClient(key_face, face_apiroot);
 
-                    var requiedFaceAttributes = new FaceAttributeType[] {
-                                FaceAttributeType.Age,
-                                FaceAttributeType.Gender,
-                                FaceAttributeType.Smile,
-                                FaceAttributeType.FacialHair,
-                                FaceAttributeType.HeadPose,
-                                FaceAttributeType.Emotion,
-                                FaceAttributeType.Glasses
-                                };
-                    var faces_task = f_client.DetectAsync(stream_send.AsStream(), true, true, requiedFaceAttributes);
-
-                    faces = await faces_task;
-
+                    faces = await f_client.DetectAsync(stream_send.AsStream());
                     if (faces != null)
                     {
-                        DisplayFacesData(faces);
-                        DisplayEmotionsData(faces);
+                        // Select biggest face
+                        var face = faces.OrderByDescending(f => f.FaceRectangle.Height * f.FaceRectangle.Width).First();
+                        var faceId = face.FaceId;
+
+                        txtLocation.Text = $"Request: Finding similar faces in Personal Match Mode for face {faceId}";
+
+                        try
+                        {
+                            // Call find facial match similar REST API, the result faces the top N with the highest similar confidence 
+                            const int requestCandidatesCount = 4;
+                            var result = await f_client.FindSimilarAsync(faceId, largeFaceListId: this._largeFaceListId, mode: FindSimilarMatchMode.matchPerson, maxNumOfCandidatesReturned: requestCandidatesCount);
+
+                            if (result.Length > 0)
+                            {
+                                var matchingFace = result.OrderByDescending(m => m.Confidence).FirstOrDefault();
+                                var trainedFace =
+                                    _facesCollection.First(f => f.Face.FaceId == matchingFace.PersistedFaceId);
+                                txtLocation.Text =
+                                    $"Face {{{matchingFace.PersistedFaceId}}} was recognized with confidence: {matchingFace.Confidence}. File: {trainedFace.FilePath}, Person: {trainedFace.PersonName}";
+                            }
+                            else
+                            {
+
+                                txtLocation.Text = "Response: No matching person.";
+                            }
+
+                            //// Update "matchFace" similar results collection for rendering
+                            //var faceSimilarResults = new FindSimilarResult();
+                            //faceSimilarResults.Faces = new ObservableCollection<Face>();
+                            //faceSimilarResults.QueryFace = new Face()
+                            //{
+                            //    ImageFile = SelectedFile,
+                            //    Top = f.FaceRectangle.Top,
+                            //    Left = f.FaceRectangle.Left,
+                            //    Width = f.FaceRectangle.Width,
+                            //    Height = f.FaceRectangle.Height,
+                            //    FaceId = faceId.ToString(),
+                            //};
+                            //foreach (var fr in result)
+                            //{
+                            //    var candidateFace = FacesCollection.First(ff => ff.FaceId == fr.PersistedFaceId.ToString());
+                            //    Face newFace = new Face();
+                            //    newFace.ImageFile = candidateFace.ImageFile;
+                            //    newFace.Confidence = fr.Confidence;
+                            //    newFace.FaceId = candidateFace.FaceId;
+                            //    faceSimilarResults.Faces.Add(newFace);
+                            //}
+
+                            //MainWindow.Log("Response: Found {0} similar faces for face {1}", faceSimilarResults.Faces.Count, faceId);
+
+                            //FindSimilarMatchFaceCollection.Add(faceSimilarResults);
+                        }
+                        catch (FaceAPIException ex)
+                        {
+                            txtLocation.Text = $"Response: {ex.ErrorCode}. {ex.ErrorMessage}";
+                        }
                     }
 
                     //hide preview
@@ -289,6 +339,76 @@ namespace MSEmpotionAPI
                 //lblError.Text = ex.Message;
                 //lblError.Visibility = Visibility.Visible;
             }
+        }
+
+        private async void InitReferenceFaces()
+        {
+            btnTakePhoto.IsEnabled = false;
+            btnSelect.IsEnabled = false;
+            ringLoading.IsActive = true;
+
+            //Face service
+            FaceServiceClient f_client = new FaceServiceClient(key_face, face_apiroot);
+
+            try
+            {
+                await f_client.CreateLargeFaceListAsync(this._largeFaceListId, this._largeFaceListId, "large face list for sample");
+
+                var largeFacesFolder = await KnownFolders.PicturesLibrary.GetFolderAsync("LargeFaces");
+                var folders = await largeFacesFolder.GetFoldersAsync();
+                foreach (var folder in folders)
+                {
+                    var files = await folder.GetFilesAsync();
+                    foreach (var file in files)
+                    {
+                        // Upload load
+                        using (var stream = await file.OpenReadAsync())
+                        {
+                            var detectedFaces = await f_client.DetectAsync(stream.CloneStream().AsStream());
+                            if (detectedFaces.Length > 0)
+                            {
+                                // Select the biggest face in the photo
+                                var detectedFace = detectedFaces.OrderByDescending(f => f.FaceRectangle.Width * f.FaceRectangle.Height).First();
+                                var uploadedFace = await f_client.AddFaceToLargeFaceListAsync(this._largeFaceListId, stream.AsStream());
+
+                                _facesCollection.Add(new TrainedFace(
+                                    new Face
+                                    {
+                                        FaceId = uploadedFace.PersistedFaceId,
+                                        FaceRectangle = detectedFace.FaceRectangle,
+                                        FaceAttributes = new FaceAttributes()
+                                    },
+                                    folder.Name,
+                                    file.Name));
+                            }
+                        }
+                    }
+                }
+
+                // Start train large face list.
+                txtLocation.Text = $"Request: Training Large Face List \"{this._largeFaceListId}\"";
+                await f_client.TrainLargeFaceListAsync(this._largeFaceListId);
+
+                // Wait until train completed
+                while (true)
+                {
+                    await Task.Delay(1000);
+                    var status = await f_client.GetLargeFaceListTrainingStatusAsync(this._largeFaceListId);
+                    txtLocation.Text = $"Response: Success. Large Face List \"{this._largeFaceListId}\" training process is {status.Status}";
+                    if (status.Status != Status.Running)
+                    {
+                        break;
+                    }
+                }
+            }
+            catch (FaceAPIException ex)
+            {
+                txtLocation.Text = $"Response: {ex.ErrorCode}. {ex.ErrorMessage}";
+            }
+
+            btnTakePhoto.IsEnabled = true;
+            btnSelect.IsEnabled = true;
+            ringLoading.IsActive = false;
         }
 
         //Open Button Click Event
@@ -442,222 +562,6 @@ namespace MSEmpotionAPI
             Picker_Hide();
         }
 
-        /// <summary>
-        /// Display Face Data
-        /// </summary>
-        /// <param name="result"></param>
-        private void DisplayFacesData(Face[] faces, bool init = true)
-        {
-            if (faces == null)
-                return;
-
-            cvasMain.Children.Clear();
-            var offset_h = 0.0; var offset_w = 0.0;
-            var p = 0.0;
-            var d = cvasMain.ActualHeight / cvasMain.ActualWidth;
-            var d2 = size_image.Height / size_image.Width;
-            if (d < d2)
-            {
-                offset_h = 0;
-                offset_w = (cvasMain.ActualWidth - cvasMain.ActualHeight / d2) / 2;
-                p = cvasMain.ActualHeight / size_image.Height;
-            }
-            else
-            {
-                offset_w = 0;
-                offset_h = (cvasMain.ActualHeight - cvasMain.ActualWidth * d2) / 2;
-                p = cvasMain.ActualWidth / size_image.Width;
-            }
-            if (faces != null)
-            {
-                int count = 1;
-                foreach (var face in faces)
-                {
-                    Windows.UI.Xaml.Shapes.Rectangle rect = new Windows.UI.Xaml.Shapes.Rectangle();
-                    rect.Width = face.FaceRectangle.Width * p;
-                    rect.Height = face.FaceRectangle.Height * p;
-                    Canvas.SetLeft(rect, face.FaceRectangle.Left * p + offset_w);
-                    Canvas.SetTop(rect, face.FaceRectangle.Top * p + offset_h);
-                    rect.Stroke = new SolidColorBrush(Colors.Orange);
-                    rect.StrokeThickness = 3;
-
-                    cvasMain.Children.Add(rect);
-
-                    TextBlock txt = new TextBlock();
-                    txt.Foreground = new SolidColorBrush(Colors.Orange);
-                    txt.Text = "#" + count;
-                    Canvas.SetLeft(txt, face.FaceRectangle.Left * p + offset_w);
-                    Canvas.SetTop(txt, face.FaceRectangle.Top * p + offset_h - 20);
-                    cvasMain.Children.Add(txt);
-                    count++;
-                }
-            }
-            if (!init)
-                return;
-
-            var list_child = gridFaces.Children.ToList();
-            list_child.ForEach((e) =>
-            {
-                if (e as TextBlock != null && (e as TextBlock).Tag != null)
-                {
-                    gridFaces.Children.Remove(e);
-                }
-            });
-
-            int index = 1;
-            foreach (var face in faces)
-            {
-                TextBlock txt0 = new TextBlock();
-                txt0.Text = "0" + index;
-                txt0.Padding = new Thickness(1);
-                Grid.SetRow(txt0, index + 1);
-                Grid.SetColumn(txt0, 0);
-                txt0.Tag = true;
-
-                TextBlock txt1 = new TextBlock();
-                txt1.Text = Math.Round(face.FaceAttributes.Age, 2).ToString();
-                txt1.Padding = new Thickness(1);
-                Grid.SetRow(txt1, index + 1);
-                Grid.SetColumn(txt1, 1);
-                txt1.Tag = true;
-
-                TextBlock txt2 = new TextBlock();
-                txt2.Text = face.FaceAttributes.Gender;
-                txt2.Padding = new Thickness(1);
-                Grid.SetRow(txt2, index + 1);
-                Grid.SetColumn(txt2, 2);
-                txt2.Tag = true;
-
-                TextBlock txt3 = new TextBlock();
-                txt3.Text = Math.Round(face.FaceAttributes.Smile, 2).ToString();
-                txt3.Padding = new Thickness(1);
-                Grid.SetRow(txt3, index + 1);
-                Grid.SetColumn(txt3, 3);
-                txt3.Tag = true;
-
-                TextBlock txt4 = new TextBlock();
-                txt4.Text = face.FaceAttributes.Glasses.ToString();
-                txt4.Padding = new Thickness(1);
-                Grid.SetRow(txt4, index + 1);
-                Grid.SetColumn(txt4, 4);
-                txt4.Tag = true;
-
-                index++;
-                gridFaces.Children.Add(txt0);
-                gridFaces.Children.Add(txt1);
-                gridFaces.Children.Add(txt2);
-                gridFaces.Children.Add(txt3);
-                gridFaces.Children.Add(txt4);
-            }
-        }
-        /// <summary>
-        /// Display Emotions data
-        /// </summary>
-        /// <param name="emotions"></param>
-        private void DisplayEmotionsData(Face[] faces, bool init = true)
-        {
-            if (faces == null)
-                return;
-            if (!init)
-                return;
-
-            var list_child = gridEmotions.Children.ToList();
-            list_child.ForEach((e) =>
-            {
-                if (e as TextBlock != null && (e as TextBlock).Tag != null)
-                {
-                    gridEmotions.Children.Remove(e);
-                }
-            });
-
-            int index = 1;
-            foreach (var face in faces)
-            {
-                TextBlock txt0 = new TextBlock();
-                txt0.Padding = new Thickness(1);
-                txt0.FontSize = 11;
-                txt0.Text = "#" + index;
-                Grid.SetRow(txt0, index + 1);
-                Grid.SetColumn(txt0, 0);
-                txt0.Tag = true;
-
-                TextBlock txt1 = new TextBlock();
-                txt1.Padding = new Thickness(1);
-                txt1.FontSize = 11;
-                txt1.Text = Math.Round(face.FaceAttributes.Emotion.Anger, 2).ToString();
-                Grid.SetRow(txt1, index + 1);
-                Grid.SetColumn(txt1, 1);
-                txt1.Tag = true;
-
-                TextBlock txt2 = new TextBlock();
-                txt2.Padding = new Thickness(1);
-                txt2.FontSize = 11;
-                txt2.Text = Math.Round(face.FaceAttributes.Emotion.Contempt, 2).ToString();
-                Grid.SetRow(txt2, index + 1);
-                Grid.SetColumn(txt2, 2);
-                txt2.Tag = true;
-
-                TextBlock txt3 = new TextBlock();
-                txt3.Padding = new Thickness(1);
-                txt3.FontSize = 11;
-                txt3.Text = Math.Round(face.FaceAttributes.Emotion.Disgust, 2).ToString();
-                Grid.SetRow(txt3, index + 1);
-                Grid.SetColumn(txt3, 3);
-                txt3.Tag = true;
-
-                TextBlock txt4 = new TextBlock();
-                txt4.Padding = new Thickness(1);
-                txt4.FontSize = 11;
-                txt4.Text = Math.Round(face.FaceAttributes.Emotion.Fear, 2).ToString();
-                Grid.SetRow(txt4, index + 1);
-                Grid.SetColumn(txt4, 4);
-                txt4.Tag = true;
-
-                TextBlock txt5 = new TextBlock();
-                txt5.Padding = new Thickness(1);
-                txt5.FontSize = 11;
-                txt5.Text = Math.Round(face.FaceAttributes.Emotion.Happiness, 2).ToString();
-                Grid.SetRow(txt5, index + 1);
-                Grid.SetColumn(txt5, 5);
-                txt5.Tag = true;
-
-                TextBlock txt6 = new TextBlock();
-                txt6.Padding = new Thickness(1);
-                txt6.FontSize = 11;
-                txt6.Text = Math.Round(face.FaceAttributes.Emotion.Neutral, 2).ToString();
-                Grid.SetRow(txt6, index + 1);
-                Grid.SetColumn(txt6, 6);
-                txt6.Tag = true;
-
-                TextBlock txt7 = new TextBlock();
-                txt7.Padding = new Thickness(1);
-                txt7.FontSize = 11;
-                txt7.Text = Math.Round(face.FaceAttributes.Emotion.Sadness, 2).ToString();
-                Grid.SetRow(txt7, index + 1);
-                Grid.SetColumn(txt7, 7);
-                txt7.Tag = true;
-
-                TextBlock txt8 = new TextBlock();
-                txt8.Padding = new Thickness(1);
-                txt8.FontSize = 11;
-                txt8.Text = Math.Round(face.FaceAttributes.Emotion.Surprise, 2).ToString();
-                Grid.SetRow(txt8, index + 1);
-                Grid.SetColumn(txt8, 8);
-                txt8.Tag = true;
-
-                index++;
-                gridEmotions.Children.Add(txt0);
-                gridEmotions.Children.Add(txt1);
-                gridEmotions.Children.Add(txt2);
-                gridEmotions.Children.Add(txt3);
-                gridEmotions.Children.Add(txt4);
-                gridEmotions.Children.Add(txt5);
-                gridEmotions.Children.Add(txt6);
-                gridEmotions.Children.Add(txt7);
-                gridEmotions.Children.Add(txt8);
-            }
-        }
-
         private async void imgPhoto_ImageOpened(object sender, RoutedEventArgs e)
         {
             size_image = new Size((imgPhoto.Source as BitmapImage).PixelWidth, (imgPhoto.Source as BitmapImage).PixelHeight);
@@ -677,87 +581,7 @@ namespace MSEmpotionAPI
 
             faces = await faces_task;
 
-            if (faces != null)
-            {
-                DisplayFacesData(faces);
-                DisplayEmotionsData(faces);
-            }
-
             ringLoading.IsActive = false;
-        }
-        /// <summary>
-        /// Re-rendering Face Data
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void cvasMain_SizeChanged(object sender, SizeChangedEventArgs e)
-        {
-            DisplayFacesData(faces, false);
-            DisplayEmotionsData(faces, false);
-        }
-        /// <summary>
-        /// Display Emotion Data
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void cvasMain_Tapped(object sender, TappedRoutedEventArgs e)
-        {
-            if (faces != null)
-            {
-                var offset_h = 0.0; var offset_w = 0.0;
-                var p = 0.0;
-                var d = cvasMain.ActualHeight / cvasMain.ActualWidth;
-                var d2 = size_image.Height / size_image.Width;
-                if (d < d2)
-                {
-                    offset_h = 0;
-                    offset_w = (cvasMain.ActualWidth - cvasMain.ActualHeight / d2) / 2;
-                    p = cvasMain.ActualHeight / size_image.Height;
-                }
-                else
-                {
-                    offset_w = 0;
-                    offset_h = (cvasMain.ActualHeight - cvasMain.ActualWidth / d2) / 2;
-                    p = cvasMain.ActualWidth / size_image.Width;
-                }
-                foreach (var face in faces)
-                {
-                    Rect rect = new Rect();
-                    rect.Width = face.FaceRectangle.Width * p;
-                    rect.Height = face.FaceRectangle.Height * p;
-
-                    rect.X = face.FaceRectangle.Left * p + offset_w;
-                    rect.Y = face.FaceRectangle.Top * p + offset_h;
-
-                    Point point = e.GetPosition(cvasMain);
-                    if (rect.Contains(point))
-                    {
-                        EmotionDataControl edc = new EmotionDataControl();
-                        var dic = new Dictionary<string, double>
-                        {
-                            {"Anger",face.FaceAttributes.Emotion.Anger },
-                            {"Contempt",face.FaceAttributes.Emotion.Contempt },
-                            {"Disgust",face.FaceAttributes.Emotion.Disgust },
-                            {"Fear",face.FaceAttributes.Emotion.Fear },
-                            {"Happiness",face.FaceAttributes.Emotion.Happiness },
-                            {"Neutral",face.FaceAttributes.Emotion.Neutral },
-                            {"Sadness",face.FaceAttributes.Emotion.Sadness },
-                            {"Surprise",face.FaceAttributes.Emotion.Surprise },
-                        };
-                        edc.Data = dic;
-                        edc.Width = cvasMain.ActualWidth * 3 / 4;
-                        edc.Height = cvasMain.ActualHeight / 3;
-
-                        emotionData.Child = edc;
-                        emotionData.VerticalOffset = point.Y;
-                        emotionData.HorizontalOffset = cvasMain.ActualWidth / 8;
-
-                        emotionData.IsOpen = true;
-
-                        break;
-                    }
-                }
-            }
         }
 
         private void btnShow_Click(object sender, RoutedEventArgs e)

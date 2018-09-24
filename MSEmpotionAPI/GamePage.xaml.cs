@@ -103,8 +103,6 @@ namespace MSEmpotionAPI
                 _timer.Stop();
                 _timer.Tick -= Timer_Tick;
                 timerText.Text = String.Empty;
-                // Flash screen
-                flashStoryboard.Begin();
                 // Capture Image
                 await TakePhotoAsync();
             }
@@ -124,13 +122,16 @@ namespace MSEmpotionAPI
         {
             try
             {
-                //store the captured image
+                // Store the captured image
                 photoFile = await KnownFolders.PicturesLibrary.CreateFileAsync(
                     PHOTO_FILE_NAME, CreationCollisionOption.GenerateUniqueName);
                 ImageEncodingProperties imageProperties = ImageEncodingProperties.CreateJpeg();
                 await mediaCapture.CapturePhotoToStorageFileAsync(imageProperties, photoFile);
                 txtLocation.Text = "Take Photo succeeded: " + photoFile.Path;
-                ComputeStream(photoFile);
+                // Flash screen
+                flashStoryboard.Begin();
+                // Compute image
+                await ComputeStream(photoFile);
             }
             catch (Exception ex)
             {
@@ -138,7 +139,7 @@ namespace MSEmpotionAPI
             }
         }
 
-        async void ComputeStream(StorageFile photoFile)
+        async Task ComputeStream(StorageFile photoFile)
         {
             try
             {
