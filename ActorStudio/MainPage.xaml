@@ -9,12 +9,18 @@
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        <SplitView Name="navSplitView" DisplayMode="CompactOverlay" CompactPaneLength="58" OpenPaneLength="180">
+        <SplitView Name="navSplitView" DisplayMode="Overlay" CompactPaneLength="58" OpenPaneLength="180">
             <SplitView.Pane>
                 <ListView SelectionMode="Single" SelectionChanged="ListView_SelectionChanged">
                     <ListViewItem Padding="8,12,0,12" Tag="0">
-                        <TextBlock Margin="10,0,20,0" Text="" FontFamily="Segoe MDL2 Assets" FontSize="25"></TextBlock>
+                        <TextBlock Margin="10,0,20,0" Text="" FontFamily="Segoe MDL2 Assets" FontSize="25"
+                                   Foreground="#ffdb29"></TextBlock>
                     </ListViewItem>
+                    <!--<Grid Padding="6,12,6,12" Tag="0">
+                        <TextBlock Margin="0,0,0,0" Text="" FontFamily="Segoe MDL2 Assets" FontSize="25"
+                       Foreground="#ffdb29"/>
+                    </Grid>-->
+                    <!--<Grid Margin="0 60 0 0"/>-->
                     <ListViewItem Padding="11,12,0,12" Tag="1">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="" FontFamily="Segoe MDL2 Assets" FontSize="18" Margin="10,3,25,0"></TextBlock>
@@ -24,10 +30,24 @@
                 </ListView>
             </SplitView.Pane>
             <SplitView.Content>
-                <Frame Name="frmPages">
+                <Grid>
+                    <Frame Name="frmPages">
 
-                </Frame>
+                    </Frame>
+                    <Grid Padding="8,12,0,12" Tag="0">
+                        <TextBlock Margin="10,0,20,0" Text="" FontFamily="Segoe MDL2 Assets" FontSize="25"
+                           Foreground="#ffdb29"
+                           Tapped="TextBlock_Tapped"/>
+                    </Grid>
+                </Grid>
             </SplitView.Content>
         </SplitView>
+       
+        <Image HorizontalAlignment="Left" VerticalAlignment="Bottom"
+               Source="ms-appx:///Assets/feuille-gauche.png"
+               Height="600"/>
+        <Image HorizontalAlignment="Right" VerticalAlignment="Bottom"
+               Source="ms-appx:///Assets/feuille-droite.png"
+               Height="600"/>
     </Grid>
 </Page>

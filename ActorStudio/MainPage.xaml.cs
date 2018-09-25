@@ -31,5 +31,10 @@ namespace ActorStudio
                 navSplitView.IsPaneOpen = false;
             }
         }
+
+        private void TextBlock_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
+        {
+            navSplitView.IsPaneOpen = !navSplitView.IsPaneOpen;
+        }
     }
 }
