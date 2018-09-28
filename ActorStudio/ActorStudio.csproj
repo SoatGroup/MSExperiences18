@@ -113,6 +113,7 @@
     <Content Include="Assets\feuille-droite.png" />
     <Content Include="Assets\feuille-gauche.png" />
     <Content Include="Assets\logo-SOAT-300dpi.png" />
+    <Content Include="Assets\smiley.png" />
     <Content Include="Properties\Default.rd.xml" />
     <Content Include="Assets\LockScreenLogo.scale-200.png" />
     <Content Include="Assets\SplashScreen.scale-200.png" />
@@ -142,6 +143,10 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\FaceApiProxy\FaceApiProxy.csproj">
+      <Project>{BE08E299-35CF-4F66-AB36-F973336D6D1D}</Project>
+      <Name>FaceApiProxy</Name>
+    </ProjectReference>
     <ProjectReference Include="..\FaceControls\FaceControls.csproj">
       <Project>{ecf01853-cd8a-4cef-b189-0912944f9674}</Project>
       <Name>FaceControls</Name>
