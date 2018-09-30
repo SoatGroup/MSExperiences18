@@ -8,9 +8,17 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <Page.DataContext>
+        <local:StateMachine />
+    </Page.DataContext>
 
     <Grid>
         <faceControls:FaceTrackingControl x:Name="FaceTrackingControl"/>
-        <TextBlock x:Name="txtLocation" VerticalAlignment="Bottom" HorizontalAlignment="Stretch" />
+        <TextBlock Name="tbInstructions"
+                   FontSize="100"
+                   Text="{x:Bind GameStateMachineVM.Instructions, Mode=OneWay}"
+                   VerticalAlignment="Top"
+                   HorizontalAlignment="Center"
+                   Foreground="Yellow"/>
     </Grid>
 </Page>

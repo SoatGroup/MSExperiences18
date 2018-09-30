@@ -18,44 +18,47 @@ namespace ActorStudio
         private const string face_apiroot = "https://westeurope.api.cognitive.microsoft.com/face/v1.0";
 
         private FaceServiceClient faceClient;
-        private State _currentState;
+
+        public StateMachine GameStateMachineVM { get; set; }
 
         public FaceTrackingPage()
         {
             this.InitializeComponent();
-            _currentState = State.Idle;
+            this.DataContextChanged += (s, e) => Bindings.Update();
+            GameStateMachineVM = this.DataContext as StateMachine;
             faceClient = new FaceServiceClient("34f95dfe9ef7460e9bfbd19987a5b6c3", "https://westeurope.api.cognitive.microsoft.com/face/v1.0");
 
             InitFaceTrackingAsync();
-            _currentState = State.WaitingBigFace;
+            GameStateMachineVM.CurrentState = State.WaitingBigFace;
         }
 
         private async void FaceTrackingControl_FaceDetected(Windows.Media.Core.FaceDetectionEffect sender, Windows.Media.Core.FaceDetectedEventArgs args)
         {
-            switch (_currentState)
+            if (GameStateMachineVM.CurrentState == State.WaitingBigFace)
             {
-                case State.Idle:
-                    break;
-                case State.WaitingBigFace:
-                    if (CheckBigFaces(args.ResultFrame.DetectedFaces))
-                    {
-                        FaceTrackingControl.FaceDetected -= FaceTrackingControl_FaceDetected;
-                        FaceTrackingControl.IsCheckSmileEnabled = true;
-                        FaceTrackingControl.SmileDetected += FaceTrackingControl_SmileDetected;
-                        await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => txtLocation.Text = "Smile tracking started");
-                        this._currentState = State.CheckingSmile;
-                    }
-                    break;
-                case State.GameStarted:
-                    break;
+                if (args.ResultFrame.DetectedFaces.Any() == false)
+                {
+                    return;
+                }
+                if (CheckBigFaces(args.ResultFrame.DetectedFaces))
+                {
+                    FaceTrackingControl.FaceDetected -= FaceTrackingControl_FaceDetected;
+                    //FaceTrackingControl.IsCheckSmileEnabled = true;
+                    //FaceTrackingControl.SmileDetected += FaceTrackingControl_SmileDetected;
+                    await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => this.GameStateMachineVM.CurrentState = State.CheckingSmile);
+                }
+                else
+                {
+                    await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => GameStateMachineVM.Instructions = "Come closer !");
+                }
             }
         }
 
         private void FaceTrackingControl_SmileDetected(object sender, Microsoft.ProjectOxford.Face.Contract.Face args)
         {
-            if (_currentState == State.CheckingSmile)
+            if (GameStateMachineVM.CurrentState == State.CheckingSmile)
             {
-                StartGame();
+                GameStateMachineVM.CurrentState = State.GameStarted;
             }
         }
 
@@ -68,7 +71,7 @@ namespace ActorStudio
 
             var biggestFace = detectedFaces
                 .OrderByDescending(f => f.FaceBox.Height * f.FaceBox.Width)
-                .FirstOrDefault(f => f.FaceBox.Height * f.FaceBox.Width > 400);
+                .FirstOrDefault(f => f.FaceBox.Height * f.FaceBox.Width > 16000);
             return biggestFace != null;
         }
 
@@ -80,25 +83,12 @@ namespace ActorStudio
                 await FaceTrackingControl.InitCameraAsync();
                 FaceTrackingControl.StartFaceTracking(faceClient);
                 FaceTrackingControl.FaceDetected += FaceTrackingControl_FaceDetected;
-                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => txtLocation.Text = "Face tracking started");
+                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => GameStateMachineVM.Instructions = "Face tracking started");
             }
             catch (Exception ex)
             {
-                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => txtLocation.Text = "Unable to initialize camera for audio/video mode: " + ex.Message);
+                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => GameStateMachineVM.Instructions = "Unable to initialize camera for audio/video mode: " + ex.Message);
             }
-        }
-
-        private void StartGame()
-        {
-            txtLocation.Text = "Starting Game";
-        }
-
-        private enum State
-        {
-            Idle,
-            WaitingBigFace,
-            CheckingSmile,
-            GameStarted
         }
     }
 }
