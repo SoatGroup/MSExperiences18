@@ -1,8 +1,15 @@
 ﻿using FaceApiProxy;
 using Microsoft.ProjectOxford.Face;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using Windows.Media.FaceAnalysis;
+using Windows.Storage;
+using Windows.UI.Core;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 
@@ -10,15 +17,24 @@ namespace ActorStudio
 {
     public class StateMachine : INotifyPropertyChanged
     {
+        private const string key_face = "34f95dfe9ef7460e9bfbd19987a5b6c3";
+        private const string face_apiroot = "https://westeurope.api.cognitive.microsoft.com/face/v1.0";
+        private const string _celebFacesListId = "f03a14f5-65ff-43b1-be5e-36800680c303";
+        private const string _celebFacesListName = "Series";
+        private const string _celebFacesGroupFolder = "Series";
+        private const int BigFaceSizeThreshold = 100000;
+        private readonly string PHOTO_FILE_NAME = "photo.jpg";
+
         private State _currentState;
         private string _instructions;
         private ImageSource _recognizedFaceImage;
         private FaceServiceClient _faceClient;
-        private const string _celebFacesGroupFolder = "Series";
+        private CoreDispatcher _dispatcher;
+        private FaceControls.FaceTrackingControl _faceTrackingControl;
+        //0 for false, 1 for true.
+        private static int isCheckingSmile = 0;
 
         public event PropertyChangedEventHandler PropertyChanged;
-
-        public FaceServiceClient FaceClient { get => _faceClient; set => _faceClient = value; }
 
         public string Instructions
         {
@@ -41,14 +57,25 @@ namespace ActorStudio
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentState)));
                     switch (value)
                     {
+                        case State.WaitingBigFace:
+                            // Start face detection
+                            _faceTrackingControl.StartFaceTracking();
+                            Instructions = null;
+                            break;
                         case State.CheckingSmile:
+                            _faceTrackingControl.IsCheckSmileEnabled = true;
                             Instructions = $"Ok, pour commencer,{Environment.NewLine}fais moi un sourire";
                             break;
-                        case State.GameStarted:
                         case State.FaceRecognition:
+                            _faceTrackingControl.StopFaceTracking();
+                            _faceTrackingControl.IsCheckSmileEnabled = false;
+                            break;
+                        case State.GameStarted:
+                            CurrentState = State.WaitingBigFace;
+                            break;
                         case State.Idle:
-                        case State.WaitingBigFace:
                         default:
+                            _faceTrackingControl.StopFaceTracking();
                             Instructions = null;
                             break;
                     }
@@ -66,9 +93,32 @@ namespace ActorStudio
             }
         }
 
-        internal void Start()
+        public StateMachine()
         {
-            CurrentState = State.WaitingBigFace;
+            _faceClient = new FaceServiceClient("34f95dfe9ef7460e9bfbd19987a5b6c3", "https://westeurope.api.cognitive.microsoft.com/face/v1.0");
+        }
+
+        internal async void StartAsync(FaceControls.FaceTrackingControl faceTrackingControl, Windows.UI.Core.CoreDispatcher dispatcher)
+        {
+            _dispatcher = dispatcher;
+            _faceTrackingControl = faceTrackingControl;
+            _faceTrackingControl.FaceClient = _faceClient;
+            _faceTrackingControl.FaceDetected += FaceTrackingControl_FaceDetected;
+            _faceTrackingControl.SmileDetected += FaceTrackingControl_SmileDetected;
+
+            await _dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
+            {
+                try
+                {
+                    await _faceTrackingControl.InitCameraAsync();
+
+                    CurrentState = State.WaitingBigFace;
+                }
+                catch (Exception ex)
+                {
+                    Instructions = "Unable to initialize camera for audio/video mode: " + ex.Message;
+                }
+            });
         }
 
         public async Task StartFaceCompareAsync(IdentifiedFace match)
@@ -87,39 +137,82 @@ namespace ActorStudio
             await Task.Delay(1000);
             Instructions = $"Voyons si tu peux{Environment.NewLine}intégrer le casting de{Environment.NewLine}Game Of Thrones !";
             await Task.Delay(5000);
-            //CurrentState = State.GameStarted;
-            CurrentState = State.Idle;
+            CurrentState = State.GameStarted;
         }
 
-        //private async void StartGameAsync()
-        //{
-        //var image = new BitmapImage();
-        //image.SetSource(stream);
+        public async void FaceTrackingControl_FaceDetected(Windows.Media.Core.FaceDetectionEffect sender, Windows.Media.Core.FaceDetectedEventArgs args)
+        {
+            if (CurrentState == State.WaitingBigFace || CurrentState == State.CheckingSmile)
+            {
+                await _dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                {
+                    if (args.ResultFrame.DetectedFaces.Any() == false)
+                    {
+                        // if no face was detected, return to state WaitingBigFace
+                        CurrentState = State.WaitingBigFace;
+                        _faceTrackingControl.CleanCanvas();
+                    }
+                    else
+                    {
+                        // faces were detected
+                        if (CurrentState == State.WaitingBigFace)
+                        {
+                            if (CheckBigFaces(args.ResultFrame.DetectedFaces))
+                            {
+                                CurrentState = State.CheckingSmile;
+                            }
+                            else
+                            {
+                                Instructions = $"N'aie pas peur...{Environment.NewLine}Approche toi !";
+                            }
 
-        //InMemoryRandomAccessStream stream = new InMemoryRandomAccessStream();
-        //ImageEncodingProperties imageProperties = ImageEncodingProperties.CreateJpeg();
-        //await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () => await MediaCapture.CapturePhotoToStreamAsync(imageProperties, stream));
-        //var stream_send = stream.CloneStream().AsStream();
-        //await FaceApiExtensions.CheckGroupAsync(_faceClient, stream_send);
+                        }
+                    }
+                });
+            }
+        }
 
-        //var delayTask = Task.Delay(3000);
-        //var tasks = new Task[] { faceTask, delayTask };
-        //Task.WaitAll(tasks);
-        //Instructions = $"Ah mais attends, on t'as déja dit que tu ressemblais à ...?";
+        private async void FaceTrackingControl_SmileDetected(object sender, Microsoft.ProjectOxford.Face.Contract.Face args)
+        {
+            if (CurrentState == State.CheckingSmile && isCheckingSmile != 1)
+            {
+                await _dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
+                {
+                    // 0 indicates that the method is not in use.
+                    if (0 == Interlocked.Exchange(ref isCheckingSmile, 1))
+                    {
+                        //store the captured image
+                        var photoFile = await KnownFolders.PicturesLibrary.CreateFileAsync(PHOTO_FILE_NAME, CreationCollisionOption.GenerateUniqueName);
+                        await _faceTrackingControl.GetCaptureFileAsync(photoFile);
+                        var fileStream = await photoFile.OpenReadAsync();
+                        var stream = fileStream.CloneStream().AsStream();
+                        //var stream = await FaceTrackingControl.GetCaptureStreamAsync();
+                        var match = await FaceDatasetHelper.CheckGroupAsync(_faceClient, stream, _celebFacesListId, _celebFacesGroupFolder);
+                        if (match == null)
+                        {
+                            //txtLocation.Text = "Response: No matching person.";
+                        }
+                        else
+                        {
+                            await StartFaceCompareAsync(match);
+                        }
+                        Interlocked.Exchange(ref isCheckingSmile, 0);
+                    }
+                });
+            }
+        }
 
-        //Instructions = "Ok, on peut commencer à jouer...";
+        private bool CheckBigFaces(IReadOnlyList<DetectedFace> detectedFaces)
+        {
+            if (detectedFaces == null)
+            {
+                return false;
+            }
 
-        //await Task.Delay(3000);
-        //Instructions = $"Ah mais attends, on t'as déja dit que tu ressemblais à ...?";
-        //}
-    }
-
-    public enum State
-    {
-        Idle,
-        WaitingBigFace,
-        CheckingSmile,
-        FaceRecognition,
-        GameStarted
+            var biggestFace = detectedFaces
+                .OrderByDescending(f => f.FaceBox.Height * f.FaceBox.Width)
+                .FirstOrDefault(f => f.FaceBox.Height * f.FaceBox.Width > BigFaceSizeThreshold);
+            return biggestFace != null;
+        }
     }
 }

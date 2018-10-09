@@ -34,6 +34,7 @@ namespace FaceControls
         private bool isPreviewing;
         private bool _mirroringPreview = true;
         private BitmapIcon smiley;
+        private BitmapIcon smileyNeutral;
 
         public FaceServiceClient FaceClient;
 
@@ -59,6 +60,10 @@ namespace FaceControls
             smiley = new BitmapIcon();
             smiley.UriSource = new Uri("ms-appx:///Assets/smiley.png");
             smiley.Foreground = new SolidColorBrush(Colors.Yellow);
+
+            smileyNeutral = new BitmapIcon();
+            smileyNeutral.UriSource = new Uri("ms-appx:///Assets/smiley_neutral.png");
+            smileyNeutral.Foreground = new SolidColorBrush(Colors.Yellow);
         }
 
         public async Task InitCameraAsync()
@@ -112,6 +117,11 @@ namespace FaceControls
         {
             _faceDetectionEffect.Enabled = false;
 
+            CleanCanvas();
+        }
+
+        public void CleanCanvas()
+        {
             // Remove any existing rectangles from previous events
             FacesCanvas.Children.Clear();
         }
@@ -190,8 +200,7 @@ namespace FaceControls
         /// <param name="faces">The list of detected faces from the FaceDetected event of the effect</param>
         private async Task HighlightDetectedFaces(IReadOnlyList<DetectedFace> faces)
         {
-            // Remove any existing rectangles from previous events
-            FacesCanvas.Children.Clear();
+            CleanCanvas();
 
             if (faces.Count < 1)
                 return;
@@ -210,11 +219,12 @@ namespace FaceControls
 
                 var left = Canvas.GetLeft(faceBoundingBox);
                 var top = Canvas.GetTop(faceBoundingBox);
-                Canvas.SetLeft(smiley, left - faceBoundingBox.Width / 4);
-                Canvas.SetTop(smiley, top - faceBoundingBox.Height / 4);
-                smiley.Width = faceBoundingBox.Width * 1.5;
-                smiley.Height = faceBoundingBox.Height * 1.5;
-                FacesCanvas.Children.Add(smiley);
+                var faceIcon = IsCheckSmileEnabled ? smiley : smileyNeutral;
+                Canvas.SetLeft(faceIcon, left - faceBoundingBox.Width / 4);
+                Canvas.SetTop(faceIcon, top - faceBoundingBox.Height / 4);
+                faceIcon.Width = faceBoundingBox.Width * 1.5;
+                faceIcon.Height = faceBoundingBox.Height * 1.5;
+                FacesCanvas.Children.Add(faceIcon);
             }
         }
 
