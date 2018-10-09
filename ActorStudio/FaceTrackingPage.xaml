@@ -6,8 +6,13 @@
     xmlns:faceControls="using:FaceControls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <!--<Page.Resources>
+        <common:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+    </Page.Resources>-->
+    
     <Page.DataContext>
         <local:StateMachine />
     </Page.DataContext>
@@ -16,7 +21,7 @@
         <faceControls:FaceTrackingControl x:Name="FaceTrackingControl"/>
         <StackPanel
             VerticalAlignment="Stretch"
-            HorizontalAlignment="Center">            
+            HorizontalAlignment="Center">
             <TextBlock Name="tbInstructions"
                        FontSize="100"
                        TextAlignment="Center"
@@ -24,11 +29,37 @@
                        VerticalAlignment="Top"
                        HorizontalAlignment="Center"
                        Foreground="Yellow"/>
-            <Image Source="{x:Bind GameStateMachineVM.RecognizedFaceImage, Mode=OneWay}" 
-                   Height="500" Width="400"
-                   VerticalAlignment="Stretch"
-                   HorizontalAlignment="Center"
-                   Stretch="UniformToFill"/>
+            <Grid HorizontalAlignment="Center"
+                  Visibility="{x:Bind GameStateMachineVM.IsFaceMatchVisible, Mode=OneWay}"
+                  Width="830"
+                  Height="500">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="30"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Image Source="{x:Bind GameStateMachineVM.OriginalFaceImage, Mode=OneWay}" 
+                       HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                       RenderTransformOrigin="0.5,0.5"
+                       Grid.Column="0"
+                       Stretch="UniformToFill"/>
+                <Image Source="{x:Bind GameStateMachineVM.RecognizedFaceImage, Mode=OneWay}" 
+                       HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                       RenderTransformOrigin="0.5,0.5"
+                       Grid.Column="2"
+                       Stretch="UniformToFill"/>
+                <Ellipse Width="100" Height="100" Fill="Yellow"
+                         Stroke="Black"
+                         StrokeThickness="2"
+                         Grid.ColumnSpan="3"/>
+                <Image Width="120" Height="120"
+                       Source="ms-appx:///Assets/round.svg"
+                       Grid.ColumnSpan="3"/>
+                <TextBlock Text="{x:Bind GameStateMachineVM.Confidence, Mode=OneWay}"
+                           FontSize="35"
+                           VerticalAlignment="Center" HorizontalAlignment="Center"
+                           Grid.ColumnSpan="3"/>
+            </Grid>
         </StackPanel>
         <!--<faceControls:FaceMatchControl 
             RecognizedFace="{x:Bind GameStateMachineVM.RecognizedFaceImage, Mode=OneWay}"

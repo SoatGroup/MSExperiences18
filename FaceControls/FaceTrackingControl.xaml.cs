@@ -432,5 +432,36 @@ namespace FaceControls
             ImageEncodingProperties imageProperties = ImageEncodingProperties.CreateJpeg();
             await MediaCapture.CapturePhotoToStorageFileAsync(imageProperties, photoFile);
         }
+
+        public async Task CaptureFaceToFileAsync(StorageFile photoFile, FaceRectangle faceRectangle)
+        {
+            var previewProperties = MediaCapture.VideoDeviceController.GetMediaStreamProperties(MediaStreamType.VideoPreview) as VideoEncodingProperties;
+            double scale = 480d / (double)previewProperties.Height;
+            VideoFrame videoFrame = new VideoFrame(BitmapPixelFormat.Bgra8, (int)(previewProperties.Width * scale), 480);
+            using (var frame = await MediaCapture.GetPreviewFrameAsync(videoFrame))
+            {
+                if (frame.SoftwareBitmap != null)
+                {
+                    var bitmap = frame.SoftwareBitmap;
+
+                    using (IRandomAccessStream writeStream = await photoFile.OpenAsync(FileAccessMode.ReadWrite))
+                    {
+                        // Create an encoder with the desired format
+                        BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, writeStream);
+
+                        encoder.SetSoftwareBitmap(bitmap);
+
+                        BitmapBounds bounds = new BitmapBounds();
+                        bounds.Width = (uint)(faceRectangle.Width * 2);
+                        bounds.Height = (uint)(faceRectangle.Height * 5/3);
+                        bounds.X = (uint)(faceRectangle.Left - faceRectangle.Width / 2);
+                        bounds.Y = (uint)(faceRectangle.Top - faceRectangle.Height / 3);
+                        encoder.BitmapTransform.Bounds = bounds;
+
+                        await encoder.FlushAsync();
+                    }
+                }
+            }
+        }
     }
 }

@@ -117,6 +117,7 @@
     <Content Include="Assets\feuille-droite.png" />
     <Content Include="Assets\feuille-gauche.png" />
     <Content Include="Assets\logo-SOAT-300dpi.png" />
+    <Content Include="Assets\round.svg" />
     <Content Include="Assets\smiley_neutral.png" />
     <Content Include="Assets\smiley.png" />
     <Content Include="Properties\Default.rd.xml" />
