@@ -57,7 +57,7 @@ namespace ActorStudio
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentState)));
                     switch (value)
                     {
-                        case State.WaitingBigFace:
+                        case State.FacesDetection:
                             // Start face detection
                             _faceTrackingControl.StartFaceTracking();
                             Instructions = null;
@@ -71,7 +71,7 @@ namespace ActorStudio
                             _faceTrackingControl.IsCheckSmileEnabled = false;
                             break;
                         case State.GameStarted:
-                            CurrentState = State.WaitingBigFace;
+                            CurrentState = State.FacesDetection;
                             break;
                         case State.Idle:
                         default:
@@ -112,7 +112,7 @@ namespace ActorStudio
                 {
                     await _faceTrackingControl.InitCameraAsync();
 
-                    CurrentState = State.WaitingBigFace;
+                    CurrentState = State.FacesDetection;
                 }
                 catch (Exception ex)
                 {
@@ -142,34 +142,39 @@ namespace ActorStudio
 
         public async void FaceTrackingControl_FaceDetected(Windows.Media.Core.FaceDetectionEffect sender, Windows.Media.Core.FaceDetectedEventArgs args)
         {
-            if (CurrentState == State.WaitingBigFace || CurrentState == State.CheckingSmile)
-            {
-                await _dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            var areBigFacesDetected = CheckBigFaces(args.ResultFrame.DetectedFaces);
+            await _dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
                 {
-                    if (args.ResultFrame.DetectedFaces.Any() == false)
+                    if (CurrentState == State.FacesDetection)
                     {
-                        // if no face was detected, return to state WaitingBigFace
-                        CurrentState = State.WaitingBigFace;
-                        _faceTrackingControl.CleanCanvas();
-                    }
-                    else
-                    {
-                        // faces were detected
-                        if (CurrentState == State.WaitingBigFace)
+                        // actually checking faces in screen
+                        if (areBigFacesDetected)
                         {
-                            if (CheckBigFaces(args.ResultFrame.DetectedFaces))
-                            {
-                                CurrentState = State.CheckingSmile;
-                            }
-                            else
-                            {
-                                Instructions = $"N'aie pas peur...{Environment.NewLine}Approche toi !";
-                            }
-
+                            // at least one 'big' face is detected so ew enable the smile check
+                            CurrentState = State.CheckingSmile;
+                        }
+                        else if (args.ResultFrame.DetectedFaces.Any())
+                        {
+                            // at least one 'small' face is detected so we encourage the person to come closer
+                            Instructions = $"N'aie pas peur...{Environment.NewLine}Approche toi !";
+                        }
+                        else
+                        {
+                            // nobody in front of the camera, we set another message
+                            Instructions = null;
+                        }
+                    }
+                    else if (CurrentState == State.CheckingSmile)
+                    {
+                        //actually checking smile one 'big' faces (with smileDetected event)
+                        if (areBigFacesDetected == false)
+                        {
+                            // if no face was detected, return to state WaitingBigFace
+                            // careful to multiple facetracking
+                            CurrentState = State.FacesDetection;
                         }
                     }
                 });
-            }
         }
 
         private async void FaceTrackingControl_SmileDetected(object sender, Microsoft.ProjectOxford.Face.Contract.Face args)
@@ -204,7 +209,7 @@ namespace ActorStudio
 
         private bool CheckBigFaces(IReadOnlyList<DetectedFace> detectedFaces)
         {
-            if (detectedFaces == null)
+            if (detectedFaces == null || !detectedFaces.Any())
             {
                 return false;
             }

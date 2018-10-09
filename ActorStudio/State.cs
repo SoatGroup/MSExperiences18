@@ -3,7 +3,7 @@
     public enum State
     {
         Idle,
-        WaitingBigFace,
+        FacesDetection,
         CheckingSmile,
         FaceRecognition,
         GameStarted

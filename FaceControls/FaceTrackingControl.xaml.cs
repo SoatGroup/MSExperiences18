@@ -151,10 +151,13 @@ namespace FaceControls
         private async void FaceDetectionEffect_FaceDetected(FaceDetectionEffect sender, FaceDetectedEventArgs args)
         {
             // Ask the UI thread to render the face bounding boxes
-            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () => await HighlightDetectedFaces(args.ResultFrame.DetectedFaces));
+            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => HighlightDetectedFaces(args.ResultFrame.DetectedFaces));
             FaceDetected?.Invoke(sender, args);
 
-            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () => await CheckSmileAsync());
+            if (IsCheckSmileEnabled)
+            {
+                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () => await CheckSmileAsync());
+            }
         }
 
         private async void mediaCapture_Failed(MediaCapture currentCaptureObject, MediaCaptureFailedEventArgs currentFailure)
@@ -198,33 +201,40 @@ namespace FaceControls
         /// Iterates over all detected faces, creating and adding Rectangles to the FacesCanvas as face bounding boxes
         /// </summary>
         /// <param name="faces">The list of detected faces from the FaceDetected event of the effect</param>
-        private async Task HighlightDetectedFaces(IReadOnlyList<DetectedFace> faces)
+        private void HighlightDetectedFaces(IReadOnlyList<DetectedFace> faces)
         {
             CleanCanvas();
 
             if (faces.Count < 1)
                 return;
 
+            var orderedFaces = faces.OrderByDescending(f => f.FaceBox.Height * f.FaceBox.Width).ToList();
             // For each detected face
-            for (int i = 0; i < faces.Count; i++)
+            for (int i = 0; i < orderedFaces.Count; i++)
             {
                 // Face coordinate units are preview resolution pixels, which can be a different scale from our display resolution, so a conversion may be necessary
                 Windows.UI.Xaml.Shapes.Rectangle faceBoundingBox = ConvertPreviewToUiRectangle(faces[i].FaceBox);
-                // Set bounding box stroke properties
-                faceBoundingBox.StrokeThickness = 2;
-                // Highlight the first face in the set
-                faceBoundingBox.Stroke = (i == 0 ? new SolidColorBrush(Colors.Blue) : new SolidColorBrush(Colors.DeepSkyBlue));
-                // Add grid to canvas containing all face UI objects
-                //FacesCanvas.Children.Add(faceBoundingBox);
 
-                var left = Canvas.GetLeft(faceBoundingBox);
-                var top = Canvas.GetTop(faceBoundingBox);
-                var faceIcon = IsCheckSmileEnabled ? smiley : smileyNeutral;
-                Canvas.SetLeft(faceIcon, left - faceBoundingBox.Width / 4);
-                Canvas.SetTop(faceIcon, top - faceBoundingBox.Height / 4);
-                faceIcon.Width = faceBoundingBox.Width * 1.5;
-                faceIcon.Height = faceBoundingBox.Height * 1.5;
-                FacesCanvas.Children.Add(faceIcon);
+                if (i != 0)
+                {
+                    // Set bounding box stroke properties
+                    faceBoundingBox.StrokeThickness = 2;
+                    // Highlight the first face in the set
+                    faceBoundingBox.Stroke = new SolidColorBrush(Colors.Yellow);
+                    // Add grid to canvas containing all face UI objects
+                    FacesCanvas.Children.Add(faceBoundingBox);
+                }
+                else
+                {
+                    var left = Canvas.GetLeft(faceBoundingBox);
+                    var top = Canvas.GetTop(faceBoundingBox);
+                    var faceIcon = IsCheckSmileEnabled ? smiley : smileyNeutral;
+                    Canvas.SetLeft(faceIcon, left - faceBoundingBox.Width / 4);
+                    Canvas.SetTop(faceIcon, top - faceBoundingBox.Height / 4);
+                    faceIcon.Width = faceBoundingBox.Width * 1.5;
+                    faceIcon.Height = faceBoundingBox.Height * 1.5;
+                    FacesCanvas.Children.Add(faceIcon);
+                }
             }
         }
 
