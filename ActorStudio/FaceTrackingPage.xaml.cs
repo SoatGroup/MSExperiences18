@@ -2,8 +2,11 @@
 using Microsoft.ProjectOxford.Face;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Threading;
 using Windows.Media.FaceAnalysis;
+using Windows.Storage;
 using Windows.UI.Xaml.Controls;
 
 namespace ActorStudio
@@ -16,8 +19,16 @@ namespace ActorStudio
         //Face API Key
         private const string key_face = "34f95dfe9ef7460e9bfbd19987a5b6c3";
         private const string face_apiroot = "https://westeurope.api.cognitive.microsoft.com/face/v1.0";
+        private const string _celebFacesListId = "f03a14f5-65ff-43b1-be5e-36800680c303";
+        private const string _celebFacesListName = "Series";
+        private const string _celebFacesGroupFolder = "Series";
+
+        private StorageFile photoFile;
+        private readonly string PHOTO_FILE_NAME = "photo.jpg";
 
         private FaceServiceClient faceClient;
+        //0 for false, 1 for true.
+        private static int isCheckingSmile = 0;
 
         public StateMachine GameStateMachineVM { get; set; }
 
@@ -26,10 +37,13 @@ namespace ActorStudio
             this.InitializeComponent();
             this.DataContextChanged += (s, e) => Bindings.Update();
             GameStateMachineVM = this.DataContext as StateMachine;
+
             faceClient = new FaceServiceClient("34f95dfe9ef7460e9bfbd19987a5b6c3", "https://westeurope.api.cognitive.microsoft.com/face/v1.0");
+            GameStateMachineVM.FaceClient = faceClient;
+            FaceTrackingControl.FaceClient = faceClient;
 
             InitFaceTrackingAsync();
-            GameStateMachineVM.CurrentState = State.WaitingBigFace;
+            GameStateMachineVM.Start();
         }
 
         private async void FaceTrackingControl_FaceDetected(Windows.Media.Core.FaceDetectionEffect sender, Windows.Media.Core.FaceDetectedEventArgs args)
@@ -43,8 +57,8 @@ namespace ActorStudio
                 if (CheckBigFaces(args.ResultFrame.DetectedFaces))
                 {
                     FaceTrackingControl.FaceDetected -= FaceTrackingControl_FaceDetected;
-                    //FaceTrackingControl.IsCheckSmileEnabled = true;
-                    //FaceTrackingControl.SmileDetected += FaceTrackingControl_SmileDetected;
+                    FaceTrackingControl.IsCheckSmileEnabled = true;
+                    FaceTrackingControl.SmileDetected += FaceTrackingControl_SmileDetected;
                     await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => this.GameStateMachineVM.CurrentState = State.CheckingSmile);
                 }
                 else
@@ -54,11 +68,32 @@ namespace ActorStudio
             }
         }
 
-        private void FaceTrackingControl_SmileDetected(object sender, Microsoft.ProjectOxford.Face.Contract.Face args)
+        private async void FaceTrackingControl_SmileDetected(object sender, Microsoft.ProjectOxford.Face.Contract.Face args)
         {
-            if (GameStateMachineVM.CurrentState == State.CheckingSmile)
+            if (GameStateMachineVM.CurrentState == State.CheckingSmile && isCheckingSmile != 1)
             {
-                GameStateMachineVM.CurrentState = State.GameStarted;
+                // 0 indicates that the method is not in use.
+                if (0 == Interlocked.Exchange(ref isCheckingSmile, 1))
+                {
+                    //store the captured image
+                    var photoFile = await KnownFolders.PicturesLibrary.CreateFileAsync(PHOTO_FILE_NAME, CreationCollisionOption.GenerateUniqueName);
+                    await FaceTrackingControl.GetCaptureFileAsync(photoFile);
+                    var fileStream = await photoFile.OpenReadAsync();
+                    var stream = fileStream.CloneStream().AsStream();
+                    //var stream = await FaceTrackingControl.GetCaptureStreamAsync();
+                    var match = await FaceDatasetHelper.CheckGroupAsync(faceClient, stream, _celebFacesListId, _celebFacesGroupFolder);
+                    if (match == null)
+                    {
+                        //txtLocation.Text = "Response: No matching person.";
+                    }
+                    else
+                    {
+                        FaceTrackingControl.StopFaceTracking();
+                        FaceTrackingControl.IsCheckSmileEnabled = false;
+                        await GameStateMachineVM.StartFaceCompareAsync(match);
+                    }
+                    Interlocked.Exchange(ref isCheckingSmile, 0);
+                }
             }
         }
 
@@ -81,7 +116,7 @@ namespace ActorStudio
             {
                 // Start face detection
                 await FaceTrackingControl.InitCameraAsync();
-                FaceTrackingControl.StartFaceTracking(faceClient);
+                FaceTrackingControl.StartFaceTracking();
                 FaceTrackingControl.FaceDetected += FaceTrackingControl_FaceDetected;
                 await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => GameStateMachineVM.Instructions = "Face tracking started");
             }

@@ -1,25 +1,25 @@
-﻿using System;
+﻿using Microsoft.ProjectOxford.Face;
+using Microsoft.ProjectOxford.Face.Contract;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Graphics.Display;
 using Windows.Graphics.Imaging;
-using Windows.Media.Core;
+using Windows.Media;
 using Windows.Media.Capture;
+using Windows.Media.Core;
+using Windows.Media.FaceAnalysis;
 using Windows.Media.MediaProperties;
+using Windows.Storage;
+using Windows.Storage.Streams;
+using Windows.UI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
-using Windows.Media.FaceAnalysis;
-using Windows.UI;
-using System.Collections.Generic;
-using Windows.UI.Xaml.Media.Imaging;
-using Microsoft.ProjectOxford.Face;
-using Windows.Storage.Streams;
-using Windows.Media;
-using System.IO;
-using System.Threading;
-using System.Linq;
-using Microsoft.ProjectOxford.Face.Contract;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 
@@ -35,7 +35,7 @@ namespace FaceControls
         private bool _mirroringPreview = true;
         private BitmapIcon smiley;
 
-        private FaceServiceClient _faceClient;
+        public FaceServiceClient FaceClient;
 
         //0 for false, 1 for true.
         private static int isCheckingSmile = 0;
@@ -102,9 +102,8 @@ namespace FaceControls
             }
         }
 
-        public void StartFaceTracking(FaceServiceClient faceClient)
+        public void StartFaceTracking()
         {
-            _faceClient = faceClient;
             // Start detecting faces
             _faceDetectionEffect.Enabled = true;
         }
@@ -144,11 +143,13 @@ namespace FaceControls
             // Ask the UI thread to render the face bounding boxes
             await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () => await HighlightDetectedFaces(args.ResultFrame.DetectedFaces));
             FaceDetected?.Invoke(sender, args);
+
+            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () => await CheckSmileAsync());
         }
 
         private async void mediaCapture_Failed(MediaCapture currentCaptureObject, MediaCaptureFailedEventArgs currentFailure)
         {
-            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
+            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
             {
                 try
                 {
@@ -209,51 +210,51 @@ namespace FaceControls
 
                 var left = Canvas.GetLeft(faceBoundingBox);
                 var top = Canvas.GetTop(faceBoundingBox);
-                Canvas.SetLeft(smiley, left - faceBoundingBox.Width/4);
-                Canvas.SetTop(smiley, top - faceBoundingBox.Height/4);
+                Canvas.SetLeft(smiley, left - faceBoundingBox.Width / 4);
+                Canvas.SetTop(smiley, top - faceBoundingBox.Height / 4);
                 smiley.Width = faceBoundingBox.Width * 1.5;
                 smiley.Height = faceBoundingBox.Height * 1.5;
                 FacesCanvas.Children.Add(smiley);
             }
+        }
 
-            if (IsCheckSmileEnabled == false)
-                return;
-            if (isCheckingSmile == 1)
-                return;
-            if (lastSmileCheck != null && lastSmileCheck > DateTime.Now.AddSeconds(-1))
-                return;
-            // 0 indicates that the method is not in use.
-            if (0 == Interlocked.Exchange(ref isCheckingSmile, 1))
+        private async Task CheckSmileAsync()
+        {
+            if (IsCheckSmileEnabled != false && isCheckingSmile != 1 && (lastSmileCheck == null || lastSmileCheck < DateTime.Now.AddSeconds(-1)))
             {
-                lastSmileCheck = DateTime.Now;
-
-                var requiedFaceAttributes = new FaceAttributeType[] { FaceAttributeType.Smile };
-                var previewProperties = MediaCapture.VideoDeviceController.GetMediaStreamProperties(MediaStreamType.VideoPreview) as VideoEncodingProperties;
-                double scale = 480d / (double)previewProperties.Height;
-                VideoFrame videoFrame = new VideoFrame(BitmapPixelFormat.Bgra8, (int)(previewProperties.Width * scale), 480);
-                using (var frame = await MediaCapture.GetPreviewFrameAsync(videoFrame))
+                // 0 indicates that the method is not in use.
+                if (0 == Interlocked.Exchange(ref isCheckingSmile, 1))
                 {
-                    if (frame.SoftwareBitmap != null)
+                    lastSmileCheck = DateTime.Now;
+
+                    var requiedFaceAttributes = new FaceAttributeType[] { FaceAttributeType.Smile };
+                    var previewProperties = MediaCapture.VideoDeviceController.GetMediaStreamProperties(MediaStreamType.VideoPreview) as VideoEncodingProperties;
+                    double scale = 480d / (double)previewProperties.Height;
+                    VideoFrame videoFrame = new VideoFrame(BitmapPixelFormat.Bgra8, (int)(previewProperties.Width * scale), 480);
+                    using (var frame = await MediaCapture.GetPreviewFrameAsync(videoFrame))
                     {
-                        var bitmap = frame.SoftwareBitmap;
-
-                        InMemoryRandomAccessStream stream = new InMemoryRandomAccessStream();
-                        BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, stream);
-                        encoder.SetSoftwareBitmap(bitmap);
-
-                        await encoder.FlushAsync();
-                        var detect = await _faceClient.DetectAsync(stream.AsStream(), false, false, requiedFaceAttributes);
-                        if (detect.Any())
+                        if (frame.SoftwareBitmap != null)
                         {
-                            var biggestFace = detect.OrderByDescending(f => f.FaceRectangle.Height * f.FaceRectangle.Width).First();
-                            if (biggestFace.FaceAttributes.Smile > 0.5)
+                            var bitmap = frame.SoftwareBitmap;
+
+                            InMemoryRandomAccessStream stream = new InMemoryRandomAccessStream();
+                            BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, stream);
+                            encoder.SetSoftwareBitmap(bitmap);
+
+                            await encoder.FlushAsync();
+                            var detect = await FaceClient.DetectAsync(stream.AsStream(), false, false, requiedFaceAttributes);
+                            if (detect.Any())
                             {
-                                SmileDetected?.Invoke(this, biggestFace);
+                                var biggestFace = detect.OrderByDescending(f => f.FaceRectangle.Height * f.FaceRectangle.Width).First();
+                                if (biggestFace.FaceAttributes.Smile > 0.5)
+                                {
+                                    SmileDetected?.Invoke(this, biggestFace);
+                                }
                             }
                         }
                     }
+                    Interlocked.Exchange(ref isCheckingSmile, 0);
                 }
-                Interlocked.Exchange(ref isCheckingSmile, 0);
             }
         }
 
@@ -396,5 +397,20 @@ namespace FaceControls
         }
 
         #endregion
+
+        public async Task<Stream> GetCaptureStreamAsync()
+        {
+            InMemoryRandomAccessStream stream = new InMemoryRandomAccessStream();
+            ImageEncodingProperties imageProperties = ImageEncodingProperties.CreateJpeg();
+            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () => await MediaCapture.CapturePhotoToStreamAsync(imageProperties, stream));
+            var stream_send = stream.CloneStream().AsStream();
+            return stream_send;
+        }
+
+        public async Task GetCaptureFileAsync(StorageFile photoFile)
+        {
+            ImageEncodingProperties imageProperties = ImageEncodingProperties.CreateJpeg();
+            await MediaCapture.CapturePhotoToStorageFileAsync(imageProperties, photoFile);
+        }
     }
 }

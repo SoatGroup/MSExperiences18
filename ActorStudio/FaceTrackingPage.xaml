@@ -14,11 +14,24 @@
 
     <Grid>
         <faceControls:FaceTrackingControl x:Name="FaceTrackingControl"/>
-        <TextBlock Name="tbInstructions"
-                   FontSize="100"
-                   Text="{x:Bind GameStateMachineVM.Instructions, Mode=OneWay}"
-                   VerticalAlignment="Top"
+        <StackPanel
+            VerticalAlignment="Stretch"
+            HorizontalAlignment="Center">            
+            <TextBlock Name="tbInstructions"
+                       FontSize="100"
+                       TextAlignment="Center"
+                       Text="{x:Bind GameStateMachineVM.Instructions, Mode=OneWay}"
+                       VerticalAlignment="Top"
+                       HorizontalAlignment="Center"
+                       Foreground="Yellow"/>
+            <Image Source="{x:Bind GameStateMachineVM.RecognizedFaceImage, Mode=OneWay}" 
+                   Height="500" Width="400"
+                   VerticalAlignment="Stretch"
                    HorizontalAlignment="Center"
-                   Foreground="Yellow"/>
+                   Stretch="UniformToFill"/>
+        </StackPanel>
+        <!--<faceControls:FaceMatchControl 
+            RecognizedFace="{x:Bind GameStateMachineVM.RecognizedFaceImage, Mode=OneWay}"
+            Height="500" Width="400" />-->
     </Grid>
 </Page>
