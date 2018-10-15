@@ -40,6 +40,7 @@ namespace ActorStudio
         private static int isCheckingSmile = 0;
 
         public event PropertyChangedEventHandler PropertyChanged;
+        public event EventHandler ImageCaptured;
 
         public string Instructions
         {
@@ -168,7 +169,7 @@ namespace ActorStudio
 
         public async Task StartFaceRecognizedAsync(IRandomAccessStream originalStream, IdentifiedFace match)
         {
-            if (match != null)
+            if (match == null)
             {
                 Instructions = $"On t'as déja dit que{Environment.NewLine}tu ressemblais à{Environment.NewLine}Alain... De Loin ?";
                 await Task.Delay(3000);
@@ -245,6 +246,8 @@ namespace ActorStudio
             {
                 await _dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
                 {
+                    ImageCaptured?.Invoke(this, null);
+
                     CurrentState = State.FaceRecognition;
 
                     // 0 indicates that the method is not in use.
@@ -252,7 +255,6 @@ namespace ActorStudio
                     {
                         //store the captured image
                         var photoFile = await KnownFolders.PicturesLibrary.CreateFileAsync(PHOTO_FILE_NAME, CreationCollisionOption.GenerateUniqueName);
-                        //await _faceTrackingControl.GetCaptureFileAsync(photoFile);
                         await _faceTrackingControl.CaptureFaceToFileAsync(photoFile, args.FaceRectangle);
                         var fileStream = await photoFile.OpenReadAsync();
                         var streamCompare = fileStream.CloneStream();

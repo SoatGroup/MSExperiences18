@@ -9,9 +9,20 @@
     xmlns:controls="using"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-    <!--<Page.Resources>
-        <common:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
-    </Page.Resources>-->
+
+    <Page.Resources>
+        <!-- Storyboard resource: Animates a rectangle's opacity. -->
+        <Storyboard x:Name="flashStoryboard">
+            <DoubleAnimationUsingKeyFrames
+                Storyboard.TargetName="flashRectangle"
+                Storyboard.TargetProperty="Opacity"
+                Duration="0:0:0.8" >
+                <LinearDoubleKeyFrame KeyTime="0:0:0.0" Value="0"/>
+                <LinearDoubleKeyFrame KeyTime="0:0:0.2" Value="1"/>
+                <LinearDoubleKeyFrame KeyTime="0:0:0.4" Value="0"/>
+            </DoubleAnimationUsingKeyFrames>
+        </Storyboard>
+    </Page.Resources>
 
     <Page.DataContext>
         <local:StateMachine />
@@ -74,8 +85,11 @@
                 </Grid>
             </Grid>
         </StackPanel>
-        <!--<faceControls:FaceMatchControl 
-            RecognizedFace="{x:Bind GameStateMachineVM.RecognizedFaceImage, Mode=OneWay}"
-            Height="500" Width="400" />-->
+
+        <Grid Grid.Row="0">
+            <Rectangle x:Name="flashRectangle" Opacity="0"
+                       VerticalAlignment="Stretch" HorizontalAlignment="Stretch"
+                       Fill="White"/>
+        </Grid>
     </Grid>
 </Page>

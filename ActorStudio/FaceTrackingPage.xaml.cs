@@ -18,6 +18,14 @@ namespace ActorStudio
 
             var dispatcher = Windows.ApplicationModel.Core.CoreApplication.GetCurrentView().CoreWindow.Dispatcher;
             GameStateMachineVM.StartAsync(FaceTrackingControl, dispatcher);
+
+            GameStateMachineVM.ImageCaptured += GameStateMachineVM_ImageCaptured;       
+        }
+
+        private void GameStateMachineVM_ImageCaptured(object sender, EventArgs e)
+        {
+            // Flash screen
+            flashStoryboard.Begin();
         }
     }
 }

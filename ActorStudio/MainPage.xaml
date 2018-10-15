@@ -8,7 +8,7 @@
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
-    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <Grid>
         <SplitView Name="navSplitView" DisplayMode="Overlay" CompactPaneLength="58" OpenPaneLength="180">
             <SplitView.Pane>
                 <ListView SelectionMode="Single" SelectionChanged="ListView_SelectionChanged">
