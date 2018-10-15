@@ -446,19 +446,39 @@ namespace FaceControls
 
                     using (IRandomAccessStream writeStream = await photoFile.OpenAsync(FileAccessMode.ReadWrite))
                     {
-                        // Create an encoder with the desired format
-                        BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, writeStream);
 
-                        encoder.SetSoftwareBitmap(bitmap);
+                        try
+                        {
+                            // Create an encoder with the desired format
+                            BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, writeStream);
 
-                        BitmapBounds bounds = new BitmapBounds();
-                        bounds.Width = (uint)(faceRectangle.Width * 2);
-                        bounds.Height = (uint)(faceRectangle.Height * 5/3);
-                        bounds.X = (uint)(faceRectangle.Left - faceRectangle.Width / 2);
-                        bounds.Y = (uint)(faceRectangle.Top - faceRectangle.Height / 3);
-                        encoder.BitmapTransform.Bounds = bounds;
+                            encoder.SetSoftwareBitmap(bitmap);
 
-                        await encoder.FlushAsync();
+                            BitmapBounds bounds = new BitmapBounds();
+                            bounds.Width = (uint)faceRectangle.Width;
+                            bounds.Height = (uint)faceRectangle.Height;
+                            bounds.X = (uint)faceRectangle.Left;
+                            bounds.Y = (uint)faceRectangle.Top;
+                            //Enlarge face rectangle
+                            //double width = faceRectangle.Width;
+                            //double height = faceRectangle.Height;
+                            //double middleFaceX = faceRectangle.Left + width / 2;
+                            //double middleFaceY = faceRectangle.Top + height / 2;
+                            //width = faceRectangle.Width * 1;//TODO 1.5
+                            //height = faceRectangle.Height * 1;//TODO 2
+                            //bounds.Width = (uint)width;
+                            //bounds.Height = (uint)height;
+                            //bounds.X = (uint)(middleFaceX - width / 2);
+                            //bounds.Y = (uint)(middleFaceY - height / 2);
+                            //TODO prevent out-of-bounds
+
+                            encoder.BitmapTransform.Bounds = bounds;
+                            await encoder.FlushAsync();
+                        }
+                        catch (Exception e)
+                        {
+                            //TODO handle error
+                        }
                     }
                 }
             }

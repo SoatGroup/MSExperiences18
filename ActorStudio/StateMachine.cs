@@ -32,6 +32,7 @@ namespace ActorStudio
         private ImageSource _recognizedFaceImage;
         private ImageSource _originalFaceImage;
         private bool _isFaceMatchVisible;
+        private bool _isFaceMatchingRunning;
         private FaceServiceClient _faceClient;
         private CoreDispatcher _dispatcher;
         private FaceControls.FaceTrackingControl _faceTrackingControl;
@@ -67,6 +68,16 @@ namespace ActorStudio
             {
                 _isFaceMatchVisible = value;
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsFaceMatchVisible)));
+            }
+        }
+
+        public bool IsFaceMatchingRunning
+        {
+            get => _isFaceMatchingRunning;
+            set
+            {
+                _isFaceMatchingRunning = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsFaceMatchingRunning)));
             }
         }
 
@@ -155,35 +166,39 @@ namespace ActorStudio
             });
         }
 
-        public async Task StartFaceCompareAsync(IRandomAccessStream originalStream, IdentifiedFace match)
+        public async Task StartFaceRecognizedAsync(IRandomAccessStream originalStream, IdentifiedFace match)
         {
-            CurrentState = State.FaceRecognition;
-            using (var photoStream = await PicturesHelper.GetPersonPictureAsync(_celebFacesGroupFolder, match.PersonName))
+            if (match != null)
             {
-                BitmapImage bitmap = new BitmapImage();
-                bitmap.SetSource(photoStream);
-                RecognizedFaceImage = bitmap;
+                Instructions = $"On t'as déja dit que{Environment.NewLine}tu ressemblais à{Environment.NewLine}Alain... De Loin ?";
+                await Task.Delay(3000);
+            }
+            else
+            {
+                using (var photoStream = await PicturesHelper.GetPersonPictureAsync(_celebFacesGroupFolder, match.PersonName))
+                {
+                    BitmapImage bitmap = new BitmapImage();
+                    bitmap.SetSource(photoStream);
+                    RecognizedFaceImage = bitmap;
+                }
+
+                Instructions = $"On t'a déja dit que{Environment.NewLine}tu ressemblais à{Environment.NewLine}{match.PersonName} ?";
+                Confidence = (match.Confidence * 100).ToString("N0") + "%";
+                IsFaceMatchVisible = true;
+
+                await Task.Delay(5000);
+                IsFaceMatchVisible = false;
+                RecognizedFaceImage = null;
             }
 
-            //using (var originalStream = await photoFile.OpenReadAsync())
-            //{
-            BitmapImage originalBitmap = new BitmapImage();
-            originalBitmap.SetSource(originalStream);
-            OriginalFaceImage = originalBitmap;
-            //}
-
-            Instructions = $"On t'a déja dit que{Environment.NewLine}tu ressemblais à{Environment.NewLine}{match.PersonName} ?";
-            Confidence = (match.Confidence * 100).ToString("N0") + " %";
-            IsFaceMatchVisible = true;
-            await Task.Delay(5000);
-            IsFaceMatchVisible = false;
-            RecognizedFaceImage = null;
             OriginalFaceImage = null;
             Confidence = null;
             Instructions = null;
             await Task.Delay(1000);
+
             Instructions = $"Voyons si tu peux{Environment.NewLine}intégrer le casting de{Environment.NewLine}Game Of Thrones !";
             await Task.Delay(5000);
+
             CurrentState = State.GameStarted;
         }
 
@@ -230,6 +245,8 @@ namespace ActorStudio
             {
                 await _dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
                 {
+                    CurrentState = State.FaceRecognition;
+
                     // 0 indicates that the method is not in use.
                     if (0 == Interlocked.Exchange(ref isCheckingSmile, 1))
                     {
@@ -238,20 +255,19 @@ namespace ActorStudio
                         //await _faceTrackingControl.GetCaptureFileAsync(photoFile);
                         await _faceTrackingControl.CaptureFaceToFileAsync(photoFile, args.FaceRectangle);
                         var fileStream = await photoFile.OpenReadAsync();
-                        var streamCheck = fileStream.CloneStream().AsStream();
                         var streamCompare = fileStream.CloneStream();
-                        //var stream = await FaceTrackingControl.GetCaptureStreamAsync();
+                        BitmapImage originalBitmap = new BitmapImage();
+                        originalBitmap.SetSource(streamCompare);
+                        OriginalFaceImage = originalBitmap;
+
+                        IsFaceMatchingRunning = true;
+
+                        var streamCheck = fileStream.CloneStream().AsStream();
                         var match = await FaceDatasetHelper.CheckGroupAsync(_faceClient, streamCheck, _celebFacesListId, _celebFacesGroupFolder);
-                        if (match == null)
-                        {
-                            //txtLocation.Text = "Response: No matching person.";
-                        }
-                        else
-                        {
-                            await StartFaceCompareAsync(streamCompare, match);
-                        }
+                        await StartFaceRecognizedAsync(streamCompare, match);
                         Interlocked.Exchange(ref isCheckingSmile, 0);
                     }
+                    IsFaceMatchingRunning = false;
                 });
             }
         }

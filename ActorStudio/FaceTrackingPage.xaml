@@ -12,7 +12,7 @@
     <!--<Page.Resources>
         <common:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
     </Page.Resources>-->
-    
+
     <Page.DataContext>
         <local:StateMachine />
     </Page.DataContext>
@@ -43,22 +43,35 @@
                        RenderTransformOrigin="0.5,0.5"
                        Grid.Column="0"
                        Stretch="UniformToFill"/>
+                <Grid Background="DarkGray"
+                      Visibility="{x:Bind GameStateMachineVM.IsFaceMatchingRunning, Mode=OneWay}"                                  
+                      Grid.Column="2">
+                </Grid>
                 <Image Source="{x:Bind GameStateMachineVM.RecognizedFaceImage, Mode=OneWay}" 
                        HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-                       RenderTransformOrigin="0.5,0.5"
+                       RenderTransformOrigin="0.5,0.5"                       
                        Grid.Column="2"
                        Stretch="UniformToFill"/>
-                <Ellipse Width="100" Height="100" Fill="Yellow"
-                         Stroke="Black"
-                         StrokeThickness="2"
-                         Grid.ColumnSpan="3"/>
-                <Image Width="120" Height="120"
-                       Source="ms-appx:///Assets/round.svg"
-                       Grid.ColumnSpan="3"/>
-                <TextBlock Text="{x:Bind GameStateMachineVM.Confidence, Mode=OneWay}"
-                           FontSize="35"
-                           VerticalAlignment="Center" HorizontalAlignment="Center"
+                <ProgressRing Foreground="Black"
+                              Grid.ColumnSpan="3"
+                                HorizontalAlignment="Center"
+                                VerticalAlignment="Center"
+                                Height="50" Width="50"
+                                IsActive="True"/>                
+                <Grid Grid.ColumnSpan="3"
+                      Visibility="{x:Bind GameStateMachineVM.IsFaceMatchingRunning, Mode=OneWay}">
+                    <Ellipse Width="140" Height="140" Fill="Yellow"
+                             Stroke="Black"
+                             StrokeThickness="2"/>
+                    <Image Width="160" Height="160"
+                           Source="ms-appx:///Assets/round.svg"
                            Grid.ColumnSpan="3"/>
+                    <TextBlock Text="{x:Bind GameStateMachineVM.Confidence, Mode=OneWay}"
+                               FontWeight="Bold"
+                               FontSize="55"
+                               VerticalAlignment="Center" HorizontalAlignment="Center"
+                               Grid.ColumnSpan="3"/>
+                </Grid>
             </Grid>
         </StackPanel>
         <!--<faceControls:FaceMatchControl 
