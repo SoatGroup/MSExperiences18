@@ -6,6 +6,7 @@
         FacesDetection,
         CheckingSmile,
         FaceRecognition,
-        GameStarted
+        EmotionsCaptures,
+        GameEnded
     }
 }

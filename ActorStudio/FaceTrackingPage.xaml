@@ -6,11 +6,18 @@
     xmlns:faceControls="using:FaceControls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:controls="using"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <Page.Resources>
+        <!-- Acrylic -->
+        <Color x:Key="AcrylicColor">#6399c0</Color>
+        <AcrylicBrush x:Key="AcrycliTransparentBrush"
+            BackgroundSource="HostBackdrop"
+            TintColor="{StaticResource AcrylicColor}"
+            TintOpacity="0"
+            FallbackColor="{StaticResource AcrylicColor}"/>
+
         <!-- Storyboard resource: Animates a rectangle's opacity. -->
         <Storyboard x:Name="flashStoryboard">
             <DoubleAnimationUsingKeyFrames
@@ -22,6 +29,24 @@
                 <LinearDoubleKeyFrame KeyTime="0:0:0.4" Value="0"/>
             </DoubleAnimationUsingKeyFrames>
         </Storyboard>
+
+        <Style x:Name="UserCapturedImageStyle" TargetType="Image">
+            <Style.Setters>
+                <Setter Property="Margin" Value="5"/>
+                <Setter Property="HorizontalAlignment" Value="Stretch"/>
+                <Setter Property="VerticalAlignment" Value="Stretch"/>
+                <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
+                <Setter Property="Stretch" Value="UniformToFill"/>
+            </Style.Setters>
+        </Style>
+
+        <Style x:Name="UserCapturedBorderStyle" TargetType="Border">
+            <Style.Setters>
+                <Setter Property="BorderThickness" Value="2"/>
+                <Setter Property="Margin" Value="15"/>
+                <Setter Property="BorderBrush" Value="Yellow"/>
+            </Style.Setters>
+        </Style>
     </Page.Resources>
 
     <Page.DataContext>
@@ -68,7 +93,7 @@
                                 HorizontalAlignment="Center"
                                 VerticalAlignment="Center"
                                 Height="50" Width="50"
-                                IsActive="True"/>                
+                                IsActive="True"/>
                 <Grid Grid.ColumnSpan="3"
                       Visibility="{x:Bind GameStateMachineVM.IsFaceMatchingRunning, Mode=OneWay}">
                     <Ellipse Width="140" Height="140" Fill="Yellow"
@@ -86,6 +111,121 @@
             </Grid>
         </StackPanel>
 
+        <!--Blur Panel-->
+        <Grid Background="{StaticResource AcrycliTransparentBrush}"
+              Visibility="{x:Bind GameStateMachineVM.IsEmotionsResultsVisible, Mode=OneWay}">
+        </Grid>
+        
+        <!--Emotions side-panel-->
+        <Grid 
+            Visibility="{x:Bind GameStateMachineVM.IsEmotionsCaptureVisible, Mode=OneWay}" >
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="5*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <Border Style="{StaticResource UserCapturedBorderStyle}" 
+                    Grid.Column="1"
+                    Grid.Row="0">
+                <Image
+                    x:Name="UserHappinessImage"
+                    Style="{StaticResource UserCapturedImageStyle}"
+                    Source="{x:Bind GameStateMachineVM.UserHappinessImage, Mode=OneWay}"
+                    />
+            </Border>
+
+            <Border Style="{StaticResource UserCapturedBorderStyle}" 
+                    Grid.Column="1"
+                    Grid.Row="1">
+                <Image
+                    x:Name="UserSadnessImage"
+                    Style="{StaticResource UserCapturedImageStyle}"
+                    Source="{x:Bind GameStateMachineVM.UserSadnessImage, Mode=OneWay}"
+                    />
+            </Border>
+
+            <Border Style="{StaticResource UserCapturedBorderStyle}" 
+                    Grid.Column="1"
+                    Grid.Row="2">
+                <Image
+                    x:Name="UserAngerImage"
+                    Style="{StaticResource UserCapturedImageStyle}"
+                    Source="{x:Bind GameStateMachineVM.UserAngerImage, Mode=OneWay}"
+                    />
+            </Border>
+
+            <Border Style="{StaticResource UserCapturedBorderStyle}" 
+                    Grid.Column="1"
+                    Grid.Row="3">
+                <Image 
+                    x:Name="UserSurpriseImage"
+                    Style="{StaticResource UserCapturedImageStyle}"
+                    Source="{x:Bind GameStateMachineVM.UserSurpriseImage, Mode=OneWay}"/>
+            </Border>
+        </Grid>
+        
+        <!--Result panel-->
+        <Grid x:Name="EmotionsResultsGrid" 
+              Visibility="{x:Bind GameStateMachineVM.IsEmotionsResultsVisible, Mode=OneWay}">
+            <Grid Width="700" Background="White">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="10*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="10*"/>
+                    <ColumnDefinition Width="2*"/>
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="2*"/>
+                    <RowDefinition Height="10*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="10*"/>
+                    <RowDefinition Height="2*"/>
+                    <RowDefinition Height="8*"/>
+                    <RowDefinition Height="2*"/>
+                </Grid.RowDefinitions>
+                <Image
+                    Grid.Column="1"
+                    Grid.Row="1"
+                    x:Name="UserHappinessResultImage"
+                    Style="{StaticResource UserCapturedImageStyle}"
+                    Source="{x:Bind GameStateMachineVM.UserHappinessImage, Mode=OneWay}"
+                    />
+                <Image
+                    Grid.Column="3"
+                    Grid.Row="1"
+                    x:Name="UserSadnessResultImage"
+                    Style="{StaticResource UserCapturedImageStyle}"
+                    Source="{x:Bind GameStateMachineVM.UserSadnessImage, Mode=OneWay}"
+                    />
+                <Image
+                    Grid.Column="1"
+                    Grid.Row="3"
+                    x:Name="UserAngerResultImage"
+                    Style="{StaticResource UserCapturedImageStyle}"
+                    Source="{x:Bind GameStateMachineVM.UserAngerImage, Mode=OneWay}"
+                    />
+                <Image
+                    Grid.Column="3"
+                    Grid.Row="3"
+                    x:Name="UserSurpriseResultImage"
+                    Style="{StaticResource UserCapturedImageStyle}"
+                    Source="{x:Bind GameStateMachineVM.UserSurpriseImage, Mode=OneWay}"
+                    />
+                <Image 
+                    Grid.Row="5"
+                    Grid.ColumnSpan="5"
+                    Source="ms-appx:///Assets/logo-SOAT-300dpi.png"/>
+            </Grid>
+        </Grid >
+
+        <!--Flash-->
         <Grid Grid.Row="0">
             <Rectangle x:Name="flashRectangle" Opacity="0"
                        VerticalAlignment="Stretch" HorizontalAlignment="Stretch"

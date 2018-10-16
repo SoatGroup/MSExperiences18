@@ -30,7 +30,8 @@ namespace FaceControls
         private readonly DisplayInformation _displayInformation = DisplayInformation.GetForCurrentView();
         private DisplayOrientations _displayOrientation = DisplayOrientations.Portrait;
         private FaceDetectionEffect _faceDetectionEffect;
-        private IMediaEncodingProperties _previewProperties;
+        private VideoEncodingProperties _previewProperties;
+        private FaceTracker _faceTracker;
         private bool isPreviewing;
         private bool _mirroringPreview = true;
         private BitmapIcon smiley;
@@ -55,6 +56,7 @@ namespace FaceControls
         public FaceTrackingControl()
         {
             this.InitializeComponent();
+
             isPreviewing = false;
 
             smiley = new BitmapIcon();
@@ -89,7 +91,7 @@ namespace FaceControls
                 FacesCanvas.FlowDirection = _mirroringPreview ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
 
                 await MediaCapture.StartPreviewAsync();
-                _previewProperties = MediaCapture.VideoDeviceController.GetMediaStreamProperties(MediaStreamType.VideoPreview);
+                _previewProperties = MediaCapture.VideoDeviceController.GetMediaStreamProperties(MediaStreamType.VideoPreview) as VideoEncodingProperties;
 
                 // Initialize the preview to the current orientation
                 if (_previewProperties != null)
@@ -100,6 +102,8 @@ namespace FaceControls
                 Status = "Camera preview succeeded";
 
                 await InitFaceTrackerAsync();
+
+                this._faceTracker = await Windows.Media.FaceAnalysis.FaceTracker.CreateAsync();
             }
             catch (Exception ex)
             {
@@ -435,51 +439,100 @@ namespace FaceControls
 
         public async Task CaptureFaceToFileAsync(StorageFile photoFile, FaceRectangle faceRectangle)
         {
-            var previewProperties = MediaCapture.VideoDeviceController.GetMediaStreamProperties(MediaStreamType.VideoPreview) as VideoEncodingProperties;
-            double scale = 480d / (double)previewProperties.Height;
-            VideoFrame videoFrame = new VideoFrame(BitmapPixelFormat.Bgra8, (int)(previewProperties.Width * scale), 480);
-            using (var frame = await MediaCapture.GetPreviewFrameAsync(videoFrame))
+            // Get video frame
+            int height = 480;
+            double scale = height / (double)_previewProperties.Height;
+            using (VideoFrame videoFrame = new VideoFrame(BitmapPixelFormat.Bgra8, (int)(_previewProperties.Width * scale), height))
+            //using (VideoFrame videoFrame = new VideoFrame(BitmapPixelFormat.Bgra8, (int)previewProperties.Width, (int)previewProperties.Height))
             {
-                if (frame.SoftwareBitmap != null)
+                await this.MediaCapture.GetPreviewFrameAsync(videoFrame);
+
+                BitmapBounds faceBounds = new BitmapBounds
                 {
-                    var bitmap = frame.SoftwareBitmap;
+                    Width = (uint)faceRectangle.Width,
+                    Height = (uint)faceRectangle.Height,
+                    X = (uint)faceRectangle.Left,
+                    Y = (uint)faceRectangle.Top
+                };
 
-                    using (IRandomAccessStream writeStream = await photoFile.OpenAsync(FileAccessMode.ReadWrite))
-                    {
+                //bounds = GetFaceBoundsFromFrame(videoFrame, bounds);//TODO Add scale parameter if needed
 
-                        try
-                        {
-                            // Create an encoder with the desired format
-                            BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, writeStream);
+                await SaveBoundedBoxToFileAsync(photoFile, videoFrame.SoftwareBitmap, BitmapEncoder.JpegEncoderId, faceBounds);
+            }
+        }
 
-                            encoder.SetSoftwareBitmap(bitmap);
+        public async Task CaptureFaceToFileAsync(StorageFile photoFile)
+        {
+            // Get video frame
+            int height = 480;
+            double scale = height / (double)_previewProperties.Height;
 
-                            BitmapBounds bounds = new BitmapBounds();
-                            bounds.Width = (uint)faceRectangle.Width;
-                            bounds.Height = (uint)faceRectangle.Height;
-                            bounds.X = (uint)faceRectangle.Left;
-                            bounds.Y = (uint)faceRectangle.Top;
-                            //Enlarge face rectangle
-                            //double width = faceRectangle.Width;
-                            //double height = faceRectangle.Height;
-                            //double middleFaceX = faceRectangle.Left + width / 2;
-                            //double middleFaceY = faceRectangle.Top + height / 2;
-                            //width = faceRectangle.Width * 1;//TODO 1.5
-                            //height = faceRectangle.Height * 1;//TODO 2
-                            //bounds.Width = (uint)width;
-                            //bounds.Height = (uint)height;
-                            //bounds.X = (uint)(middleFaceX - width / 2);
-                            //bounds.Y = (uint)(middleFaceY - height / 2);
-                            //TODO prevent out-of-bounds
+            // Capture gray image for face detection
+            var videoFrame = new VideoFrame(BitmapPixelFormat.Bgra8, (int)(_previewProperties.Width * scale), height);
+            var frame = await this.MediaCapture.GetPreviewFrameAsync(videoFrame);
+            //Capture color image for saving            
+            var grayVideoFrame = new VideoFrame(BitmapPixelFormat.Gray8, (int)(_previewProperties.Width * scale), height);
+            var grayFrame = await this.MediaCapture.GetPreviewFrameAsync(grayVideoFrame);
+            // Detect faces
+            IList<DetectedFace> faces = null;
+            if (FaceDetector.IsBitmapPixelFormatSupported(grayVideoFrame.SoftwareBitmap.BitmapPixelFormat))
+            {
+                faces = await this._faceTracker.ProcessNextFrameAsync(grayVideoFrame);
+            }
 
-                            encoder.BitmapTransform.Bounds = bounds;
-                            await encoder.FlushAsync();
-                        }
-                        catch (Exception e)
-                        {
-                            //TODO handle error
-                        }
-                    }
+            if (faces.Any())
+            {
+                var mainFace = faces.OrderByDescending(f => f.FaceBox.Height * f.FaceBox.Width).First();
+                var faceBounds = GetFaceBoundsFromFrame(frame, mainFace.FaceBox);
+                await SaveBoundedBoxToFileAsync(photoFile, frame.SoftwareBitmap, BitmapEncoder.BmpEncoderId, faceBounds);
+            }
+            else
+            {
+                //TODO what if no face detected ? save full image ?
+            }
+        }
+
+        private BitmapBounds GetFaceBoundsFromFrame(VideoFrame videoFrame, BitmapBounds bounds, double scale = 1)
+        {
+            //Enlarge face rectangle
+            //double width = faceRectangle.Width;
+            //double height = faceRectangle.Height;
+            //double middleFaceX = faceRectangle.Left + width / 2;
+            //double middleFaceY = faceRectangle.Top + height / 2;
+            //width = faceRectangle.Width * 1;//TODO 1.5
+            //height = faceRectangle.Height * 1;//TODO 2
+            //bounds.Width = (uint)width;
+            //bounds.Height = (uint)height;
+            //bounds.X = (uint)(middleFaceX - width / 2);
+            //bounds.Y = (uint)(middleFaceY - height / 2);
+            //TODO prevent out-of-bounds
+            if (scale != 1)
+            {
+                bounds.X = (uint)(bounds.X * scale);
+                bounds.Y = (uint)(bounds.Y * scale);
+                bounds.Height = (uint)(bounds.Height * scale);
+                bounds.Width = (uint)(bounds.Width * scale);
+            }
+            return bounds;
+        }
+
+        private static async Task SaveBoundedBoxToFileAsync(StorageFile photoFile, SoftwareBitmap softwareBitmap, Guid encoderId, BitmapBounds bounds)
+        {
+            using (IRandomAccessStream writeStream = await photoFile.OpenAsync(FileAccessMode.ReadWrite))
+            {
+                try
+                {
+                    // Create an encoder with the desired format
+                    BitmapEncoder encoder = await BitmapEncoder.CreateAsync(encoderId, writeStream);
+
+                    encoder.SetSoftwareBitmap(softwareBitmap);
+
+                    encoder.BitmapTransform.Bounds = bounds;
+                    await encoder.FlushAsync();
+                }
+                catch (Exception e)
+                {
+                    //TODO handle error
                 }
             }
         }

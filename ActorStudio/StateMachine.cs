@@ -18,20 +18,23 @@ namespace ActorStudio
 {
     public class StateMachine : INotifyPropertyChanged
     {
+        #region Face API Client
         private const string key_face = "34f95dfe9ef7460e9bfbd19987a5b6c3";
         private const string face_apiroot = "https://westeurope.api.cognitive.microsoft.com/face/v1.0";
         private const string _celebFacesListId = "f03a14f5-65ff-43b1-be5e-36800680c303";
         private const string _celebFacesListName = "Series";
         private const string _celebFacesGroupFolder = "Series";
+        #endregion Face API Client
+
         private const int BigFaceSizeThreshold = 100000;
         private readonly string PHOTO_FILE_NAME = "photo.jpg";
 
         private State _currentState;
         private string _instructions;
         private string _confidence;
-        private ImageSource _recognizedFaceImage;
-        private ImageSource _originalFaceImage;
         private bool _isFaceMatchVisible;
+        private bool _isEmotionsCaptureVisible;
+        private bool _isEmotionsResultsVisible;
         private bool _isFaceMatchingRunning;
         private FaceServiceClient _faceClient;
         private CoreDispatcher _dispatcher;
@@ -41,6 +44,7 @@ namespace ActorStudio
 
         public event PropertyChangedEventHandler PropertyChanged;
         public event EventHandler ImageCaptured;
+        public event EventHandler AllEmotionsCaptured;
 
         public string Instructions
         {
@@ -82,6 +86,26 @@ namespace ActorStudio
             }
         }
 
+        public bool IsEmotionsCaptureVisible
+        {
+            get => _isEmotionsCaptureVisible;
+            set
+            {
+                _isEmotionsCaptureVisible = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsEmotionsCaptureVisible)));
+            }
+        }
+
+        public bool IsEmotionsResultsVisible
+        {
+            get => _isEmotionsResultsVisible;
+            set
+            {
+                _isEmotionsResultsVisible = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsEmotionsResultsVisible)));
+            }
+        }
+
         public State CurrentState
         {
             get => _currentState;
@@ -89,6 +113,8 @@ namespace ActorStudio
             {
                 if (value != _currentState)
                 {
+                    if (_currentState == value)
+                        return;
                     _currentState = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentState)));
                     switch (value)
@@ -106,10 +132,17 @@ namespace ActorStudio
                             _faceTrackingControl.StopFaceTracking();
                             _faceTrackingControl.IsCheckSmileEnabled = false;
                             break;
-                        case State.GameStarted:
-                            CurrentState = State.FacesDetection;
+                        case State.EmotionsCaptures:
+                            _faceTrackingControl.StopFaceTracking();
+                            _faceTrackingControl.IsCheckSmileEnabled = false;
+                            StartCaptureEmotionsAsync();
+                            break;
+                        case State.GameEnded:
+                            DisplayResultsAsync();
                             break;
                         case State.Idle:
+                            CurrentState = State.FacesDetection;
+                            break;
                         default:
                             _faceTrackingControl.StopFaceTracking();
                             Instructions = null;
@@ -118,6 +151,11 @@ namespace ActorStudio
                 }
             }
         }
+
+        #region Face Matching Images
+
+        private ImageSource _recognizedFaceImage;
+        private ImageSource _originalFaceImage;
 
         public ImageSource RecognizedFaceImage
         {
@@ -138,6 +176,57 @@ namespace ActorStudio
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(OriginalFaceImage)));
             }
         }
+
+        #endregion Face Matching Images
+
+        #region Face Matching Images
+
+        private ImageSource _userHappinessImage;
+        private ImageSource _userSadnessImage;
+        private ImageSource _userAngerImage;
+        private ImageSource _userSurpriseImage;
+
+        public ImageSource UserHappinessImage
+        {
+            get => _userHappinessImage;
+            set
+            {
+                _userHappinessImage = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(UserHappinessImage)));
+            }
+        }
+
+        public ImageSource UserSadnessImage
+        {
+            get => _userSadnessImage;
+            set
+            {
+                _userSadnessImage = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(UserSadnessImage)));
+            }
+        }
+
+        public ImageSource UserAngerImage
+        {
+            get => _userAngerImage;
+            set
+            {
+                _userAngerImage = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(UserAngerImage)));
+            }
+        }
+
+        public ImageSource UserSurpriseImage
+        {
+            get => _userSurpriseImage;
+            set
+            {
+                _userSurpriseImage = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(UserSurpriseImage)));
+            }
+        }
+
+        #endregion region User Captured Images
 
         public StateMachine()
         {
@@ -200,7 +289,7 @@ namespace ActorStudio
             Instructions = $"Voyons si tu peux{Environment.NewLine}intégrer le casting de{Environment.NewLine}Game Of Thrones !";
             await Task.Delay(5000);
 
-            CurrentState = State.GameStarted;
+            CurrentState = State.EmotionsCaptures;
         }
 
         public async void FaceTrackingControl_FaceDetected(Windows.Media.Core.FaceDetectionEffect sender, Windows.Media.Core.FaceDetectedEventArgs args)
@@ -285,6 +374,68 @@ namespace ActorStudio
                 .OrderByDescending(f => f.FaceBox.Height * f.FaceBox.Width)
                 .FirstOrDefault(f => f.FaceBox.Height * f.FaceBox.Width > BigFaceSizeThreshold);
             return biggestFace != null;
+        }
+
+        private async void StartCaptureEmotionsAsync()
+        {
+            int waitMillisecondsDelay = 3000;
+
+            IsEmotionsCaptureVisible = true;
+
+            Instructions = $"Tu vas devoir nous jouer {Environment.NewLine} plusieurs émotions {Environment.NewLine} Prêt ?";
+            await Task.Delay(waitMillisecondsDelay);
+
+            UserHappinessImage = await WaitAndCaptureEmotionAsync("LA JOIE", UserHappinessImage, waitMillisecondsDelay);
+            UserSadnessImage = await WaitAndCaptureEmotionAsync("LA TRISTESSE", UserSadnessImage, waitMillisecondsDelay);
+            UserAngerImage = await WaitAndCaptureEmotionAsync("LA COLÈRE", UserAngerImage, waitMillisecondsDelay);
+            UserSurpriseImage = await WaitAndCaptureEmotionAsync("LA SURPRISE", UserSurpriseImage, waitMillisecondsDelay);
+
+            await Task.Delay(2000);
+
+            CurrentState = State.GameEnded;
+        }
+
+        private async Task<ImageSource> WaitAndCaptureEmotionAsync(string emotionName, ImageSource image, int waitMillisecondsDelay)
+        {
+            Instructions = null;
+            await Task.Delay(1000);
+            Instructions = $"- {emotionName.ToUpper()} -";
+            await Task.Delay(waitMillisecondsDelay);
+            // Capture image
+            ImageCaptured?.Invoke(this, null);
+            // Store the captured image
+            BitmapImage originalBitmap = new BitmapImage();
+            await _dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
+            {
+                var photoFile = await KnownFolders.PicturesLibrary.CreateFileAsync(PHOTO_FILE_NAME, CreationCollisionOption.GenerateUniqueName);
+                await _faceTrackingControl.CaptureFaceToFileAsync(photoFile);
+                var fileStream = await photoFile.OpenReadAsync();
+                var streamCompare = fileStream.CloneStream();
+                originalBitmap.SetSource(streamCompare);
+            });
+            Instructions = null;
+            return originalBitmap;
+        }
+
+        private async void DisplayResultsAsync()
+        {
+            await _dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
+            {
+                IsEmotionsResultsVisible = true;
+                AllEmotionsCaptured?.Invoke(this, null);
+                IsEmotionsCaptureVisible = false;
+                await Task.Delay(15000);
+
+                IsEmotionsResultsVisible = false;
+                IsEmotionsCaptureVisible = false;
+                await Task.Delay(3000);
+
+                UserHappinessImage = null;
+                UserSadnessImage = null;
+                UserAngerImage = null;
+                UserSurpriseImage = null;
+                this.CurrentState = State.Idle;
+            });
         }
     }
 }
