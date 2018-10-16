@@ -95,6 +95,7 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Constants.cs" />
     <Compile Include="FaceApiExtensions.cs" />
     <Compile Include="FaceTrackingPage.xaml.cs">
       <DependentUpon>FaceTrackingPage.xaml</DependentUpon>

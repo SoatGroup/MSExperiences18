@@ -18,17 +18,6 @@ namespace ActorStudio
 {
     public class StateMachine : INotifyPropertyChanged
     {
-        #region Face API Client
-        private const string key_face = "34f95dfe9ef7460e9bfbd19987a5b6c3";
-        private const string face_apiroot = "https://westeurope.api.cognitive.microsoft.com/face/v1.0";
-        private const string _celebFacesListId = "f03a14f5-65ff-43b1-be5e-36800680c303";
-        private const string _celebFacesListName = "Series";
-        private const string _celebFacesGroupFolder = "Series";
-        #endregion Face API Client
-
-        private const int BigFaceSizeThreshold = 100000;
-        private readonly string PHOTO_FILE_NAME = "photo.jpg";
-
         private State _currentState;
         private string _instructions;
         private string _confidence;
@@ -265,7 +254,7 @@ namespace ActorStudio
             }
             else
             {
-                using (var photoStream = await PicturesHelper.GetPersonPictureAsync(_celebFacesGroupFolder, match.PersonName))
+                using (var photoStream = await PicturesHelper.GetPersonPictureAsync(Constants._celebFacesGroupFolder, match.PersonName))
                 {
                     BitmapImage bitmap = new BitmapImage();
                     bitmap.SetSource(photoStream);
@@ -343,7 +332,7 @@ namespace ActorStudio
                     if (0 == Interlocked.Exchange(ref isCheckingSmile, 1))
                     {
                         //store the captured image
-                        var photoFile = await KnownFolders.PicturesLibrary.CreateFileAsync(PHOTO_FILE_NAME, CreationCollisionOption.GenerateUniqueName);
+                        var photoFile = await KnownFolders.PicturesLibrary.CreateFileAsync(Constants.PHOTO_FILE_NAME, CreationCollisionOption.GenerateUniqueName);
                         await _faceTrackingControl.CaptureFaceToFileAsync(photoFile, args.FaceRectangle);
                         var fileStream = await photoFile.OpenReadAsync();
                         var streamCompare = fileStream.CloneStream();
@@ -354,7 +343,7 @@ namespace ActorStudio
                         IsFaceMatchingRunning = true;
 
                         var streamCheck = fileStream.CloneStream().AsStream();
-                        var match = await FaceDatasetHelper.CheckGroupAsync(_faceClient, streamCheck, _celebFacesListId, _celebFacesGroupFolder);
+                        var match = await FaceDatasetHelper.CheckGroupAsync(_faceClient, streamCheck, Constants._celebFacesListId, Constants._celebFacesGroupFolder);
                         await StartFaceRecognizedAsync(streamCompare, match);
                         Interlocked.Exchange(ref isCheckingSmile, 0);
                     }
@@ -372,7 +361,7 @@ namespace ActorStudio
 
             var biggestFace = detectedFaces
                 .OrderByDescending(f => f.FaceBox.Height * f.FaceBox.Width)
-                .FirstOrDefault(f => f.FaceBox.Height * f.FaceBox.Width > BigFaceSizeThreshold);
+                .FirstOrDefault(f => f.FaceBox.Height * f.FaceBox.Width > Constants.BigFaceSizeThreshold);
             return biggestFace != null;
         }
 
@@ -407,7 +396,7 @@ namespace ActorStudio
             BitmapImage originalBitmap = new BitmapImage();
             await _dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
             {
-                var photoFile = await KnownFolders.PicturesLibrary.CreateFileAsync(PHOTO_FILE_NAME, CreationCollisionOption.GenerateUniqueName);
+                var photoFile = await KnownFolders.PicturesLibrary.CreateFileAsync(Constants.PHOTO_FILE_NAME, CreationCollisionOption.GenerateUniqueName);
                 await _faceTrackingControl.CaptureFaceToFileAsync(photoFile);
                 var fileStream = await photoFile.OpenReadAsync();
                 var streamCompare = fileStream.CloneStream();

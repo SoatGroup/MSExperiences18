@@ -12,8 +12,8 @@
     <Page.Resources>
         <!-- Acrylic -->
         <Color x:Key="AcrylicColor">#6399c0</Color>
-        <AcrylicBrush x:Key="AcrycliTransparentBrush"
-            BackgroundSource="HostBackdrop"
+        <AcrylicBrush x:Key="AcryclicTransparentBrush"
+            BackgroundSource="Backdrop"
             TintColor="{StaticResource AcrylicColor}"
             TintOpacity="0"
             FallbackColor="{StaticResource AcrylicColor}"/>
@@ -112,7 +112,7 @@
         </StackPanel>
 
         <!--Blur Panel-->
-        <Grid Background="{StaticResource AcrycliTransparentBrush}"
+        <Grid Background="{StaticResource AcryclicTransparentBrush}"
               Visibility="{x:Bind GameStateMachineVM.IsEmotionsResultsVisible, Mode=OneWay}">
         </Grid>
         
@@ -173,7 +173,8 @@
         <!--Result panel-->
         <Grid x:Name="EmotionsResultsGrid" 
               Visibility="{x:Bind GameStateMachineVM.IsEmotionsResultsVisible, Mode=OneWay}">
-            <Grid Width="700" Background="White">
+            <Grid Width="700" Background="White"
+                  Margin="30">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="2*"/>
                     <ColumnDefinition Width="10*"/>

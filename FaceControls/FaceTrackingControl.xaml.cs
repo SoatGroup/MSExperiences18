@@ -154,13 +154,32 @@ namespace FaceControls
 
         private async void FaceDetectionEffect_FaceDetected(FaceDetectionEffect sender, FaceDetectedEventArgs args)
         {
-            // Ask the UI thread to render the face bounding boxes
-            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => HighlightDetectedFaces(args.ResultFrame.DetectedFaces));
-            FaceDetected?.Invoke(sender, args);
-
-            if (IsCheckSmileEnabled)
+            if (args.ResultFrame.DetectedFaces.Any())
             {
-                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () => await CheckSmileAsync());
+                var biggestFace = args.ResultFrame.DetectedFaces.OrderByDescending(f => f.FaceBox.Height * f.FaceBox.Width).FirstOrDefault();
+                var faceBounds = new BitmapBounds()
+                {
+                    X = biggestFace.FaceBox.X,
+                    Y = biggestFace.FaceBox.Y,
+                    Height = biggestFace.FaceBox.Height,
+                    Width = biggestFace.FaceBox.Width
+                };
+                // Check if face is not too big
+                if (false == TryExtendFaceBounds(
+                    (int)_previewProperties.Width, (int)_previewProperties.Height,
+                    Constants.FaceBoxRatio, ref faceBounds))
+                {
+                    return;
+                }
+
+                // Ask the UI thread to render the face bounding boxes
+                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => HighlightDetectedFaces(args.ResultFrame.DetectedFaces));
+                FaceDetected?.Invoke(sender, args);
+
+                if (IsCheckSmileEnabled)
+                {
+                    await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () => await CheckSmileAsync());
+                }
             }
         }
 
@@ -280,49 +299,6 @@ namespace FaceControls
                     Interlocked.Exchange(ref isCheckingSmile, 0);
                 }
             }
-        }
-
-        /// <summary>
-        /// Takes face information defined in preview coordinates and returns one in UI coordinates, taking
-        /// into account the position and size of the preview control.
-        /// </summary>
-        /// <param name="faceBoxInPreviewCoordinates">Face coordinates as retried from the FaceBox property of a DetectedFace, in preview coordinates.</param>
-        /// <returns>Rectangle in UI (CaptureElement) coordinates, to be used in a Canvas control.</returns>
-        private Windows.UI.Xaml.Shapes.Rectangle GetFaceHatRectangle(BitmapBounds faceBoxInPreviewCoordinates)
-        {
-            var result = new Windows.UI.Xaml.Shapes.Rectangle();
-            var previewStream = _previewProperties as VideoEncodingProperties;
-
-            // If there is no available information about the preview, return an empty rectangle, as re-scaling to the screen coordinates will be impossible
-            if (previewStream == null) return result;
-
-            // Similarly, if any of the dimensions is zero (which would only happen in an error case) return an empty rectangle
-            if (previewStream.Width == 0 || previewStream.Height == 0) return result;
-
-            double streamWidth = previewStream.Width;
-            double streamHeight = previewStream.Height;
-
-            // For portrait orientations, the width and height need to be swapped
-            if (_displayOrientation == DisplayOrientations.Portrait || _displayOrientation == DisplayOrientations.PortraitFlipped)
-            {
-                streamHeight = previewStream.Width;
-                streamWidth = previewStream.Height;
-            }
-
-            // Get the rectangle that is occupied by the actual video feed
-            var previewInUI = GetPreviewStreamRectInControl(previewStream, PreviewControl);
-
-            // Scale the width and height from preview stream coordinates to window coordinates
-            result.Width = (faceBoxInPreviewCoordinates.Width / streamWidth) * previewInUI.Width * 2;
-            result.Height = (faceBoxInPreviewCoordinates.Height / streamHeight) * previewInUI.Height * 2;
-
-            // Scale the X and Y coordinates from preview stream coordinates to window coordinates
-            var x = (faceBoxInPreviewCoordinates.X / streamWidth) * previewInUI.Width;
-            var y = (faceBoxInPreviewCoordinates.Y / streamHeight) * previewInUI.Height;
-            Canvas.SetLeft(result, x - result.Width / 4);
-            Canvas.SetTop(result, y + result.Height / 3);
-
-            return result;
         }
 
         /// <summary>
@@ -455,10 +431,43 @@ namespace FaceControls
                     Y = (uint)faceRectangle.Top
                 };
 
-                //bounds = GetFaceBoundsFromFrame(videoFrame, bounds);//TODO Add scale parameter if needed
+                faceBounds = GetFaceBoundsFromFrame(videoFrame, faceBounds, 1);
+                TryExtendFaceBounds(
+                    videoFrame.SoftwareBitmap.PixelWidth,
+                    videoFrame.SoftwareBitmap.PixelHeight,
+                    Constants.FaceBoxRatio,
+                    ref faceBounds);
 
                 await SaveBoundedBoxToFileAsync(photoFile, videoFrame.SoftwareBitmap, BitmapEncoder.JpegEncoderId, faceBounds);
             }
+        }
+
+        private bool TryExtendFaceBounds(int imageWidth, int imageHeight, double ratio, ref BitmapBounds bounds)
+        {
+            // Get center of face
+            var width = bounds.Width;
+            var height = bounds.Height;
+            var center = new Point(bounds.X + width / 2, bounds.Y + height / 2);
+
+            // Get new bounds
+            var newLeft = center.X - width * ratio / 2;
+            var newRight = center.X + width * ratio / 2;
+            var newTop = center.Y - width * ratio / 2;
+            var newBottom = center.Y + width * ratio / 2;
+
+            if (newLeft > 0 &&
+                newRight < imageWidth &&
+                newTop > 0 &&
+                newBottom < imageHeight)
+            {
+                bounds.X = (uint)Math.Truncate(newLeft);
+                bounds.Y = (uint)Math.Truncate(newTop);
+                bounds.Height = (uint)Math.Truncate(height * ratio);
+                bounds.Width = (uint)Math.Truncate(width * ratio);
+
+                return true;
+            }
+            return false;
         }
 
         public async Task CaptureFaceToFileAsync(StorageFile photoFile)
@@ -483,7 +492,12 @@ namespace FaceControls
             if (faces.Any())
             {
                 var mainFace = faces.OrderByDescending(f => f.FaceBox.Height * f.FaceBox.Width).First();
-                var faceBounds = GetFaceBoundsFromFrame(frame, mainFace.FaceBox);
+                var faceBounds = GetFaceBoundsFromFrame(videoFrame, mainFace.FaceBox, 1);
+                TryExtendFaceBounds(
+                    videoFrame.SoftwareBitmap.PixelWidth,
+                    videoFrame.SoftwareBitmap.PixelHeight,
+                    Constants.FaceBoxRatio,
+                    ref faceBounds);
                 await SaveBoundedBoxToFileAsync(photoFile, frame.SoftwareBitmap, BitmapEncoder.BmpEncoderId, faceBounds);
             }
             else
@@ -494,24 +508,13 @@ namespace FaceControls
 
         private BitmapBounds GetFaceBoundsFromFrame(VideoFrame videoFrame, BitmapBounds bounds, double scale = 1)
         {
-            //Enlarge face rectangle
-            //double width = faceRectangle.Width;
-            //double height = faceRectangle.Height;
-            //double middleFaceX = faceRectangle.Left + width / 2;
-            //double middleFaceY = faceRectangle.Top + height / 2;
-            //width = faceRectangle.Width * 1;//TODO 1.5
-            //height = faceRectangle.Height * 1;//TODO 2
-            //bounds.Width = (uint)width;
-            //bounds.Height = (uint)height;
-            //bounds.X = (uint)(middleFaceX - width / 2);
-            //bounds.Y = (uint)(middleFaceY - height / 2);
-            //TODO prevent out-of-bounds
+            // Apply ratio if needed
             if (scale != 1)
             {
-                bounds.X = (uint)(bounds.X * scale);
-                bounds.Y = (uint)(bounds.Y * scale);
-                bounds.Height = (uint)(bounds.Height * scale);
-                bounds.Width = (uint)(bounds.Width * scale);
+                bounds.X = (uint)Math.Truncate(bounds.X * scale);
+                bounds.Y = (uint)Math.Truncate(bounds.Y * scale);
+                bounds.Width = (uint)Math.Truncate(bounds.Width * scale);
+                bounds.Height = (uint)Math.Truncate(bounds.Height * scale);
             }
             return bounds;
         }
