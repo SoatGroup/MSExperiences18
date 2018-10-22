@@ -1,4 +1,5 @@
 ﻿using FaceApiProxy;
+using Microsoft.ProjectOxford.Common.Contract;
 using Microsoft.ProjectOxford.Face;
 using System;
 using System.Collections.Generic;
@@ -168,13 +169,9 @@ namespace ActorStudio
 
         #endregion Face Matching Images
 
-        #region Face Matching Images
-
+        #region User Captured Images and Scores
+                
         private ImageSource _userHappinessImage;
-        private ImageSource _userSadnessImage;
-        private ImageSource _userAngerImage;
-        private ImageSource _userSurpriseImage;
-
         public ImageSource UserHappinessImage
         {
             get => _userHappinessImage;
@@ -185,6 +182,7 @@ namespace ActorStudio
             }
         }
 
+        private ImageSource _userSadnessImage;
         public ImageSource UserSadnessImage
         {
             get => _userSadnessImage;
@@ -194,7 +192,8 @@ namespace ActorStudio
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(UserSadnessImage)));
             }
         }
-
+        
+        private ImageSource _userAngerImage;
         public ImageSource UserAngerImage
         {
             get => _userAngerImage;
@@ -205,6 +204,7 @@ namespace ActorStudio
             }
         }
 
+        private ImageSource _userSurpriseImage;
         public ImageSource UserSurpriseImage
         {
             get => _userSurpriseImage;
@@ -215,7 +215,51 @@ namespace ActorStudio
             }
         }
 
-        #endregion region User Captured Images
+        private string _hapinessScore;
+        public string HapinessScore
+        {
+            get => _hapinessScore;
+            set
+            {
+                _hapinessScore = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HapinessScore)));
+            }
+        }
+
+        private string _surpriseScore;
+        public string SupriseScore
+        {
+            get => _surpriseScore;
+            set
+            {
+                _surpriseScore = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SupriseScore)));
+            }
+        }
+
+        private string _sadnessScore;
+        public string SadnessScore
+        {
+            get => _sadnessScore;
+            set
+            {
+                _sadnessScore = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SadnessScore)));
+            }
+        }
+
+        private string _angerScore;
+        public string AngerScore
+        {
+            get => _angerScore;
+            set
+            {
+                _angerScore = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(AngerScore)));
+            }
+        }
+
+        #endregion User Captured Images and Scores
 
         public StateMachine()
         {
@@ -369,22 +413,29 @@ namespace ActorStudio
         {
             int waitMillisecondsDelay = 3000;
 
+            HapinessScore = null;
+            SadnessScore = null;
+            SupriseScore = null;
+            AngerScore = null;
             IsEmotionsCaptureVisible = true;
 
             Instructions = $"Tu vas devoir nous jouer {Environment.NewLine} plusieurs émotions {Environment.NewLine} Prêt ?";
             await Task.Delay(waitMillisecondsDelay);
+            
+            await WaitAndCaptureEmotionAsync("LA JOIE", waitMillisecondsDelay, Emotion.Hapiness);
 
-            UserHappinessImage = await WaitAndCaptureEmotionAsync("LA JOIE", UserHappinessImage, waitMillisecondsDelay);
-            UserSadnessImage = await WaitAndCaptureEmotionAsync("LA TRISTESSE", UserSadnessImage, waitMillisecondsDelay);
-            UserAngerImage = await WaitAndCaptureEmotionAsync("LA COLÈRE", UserAngerImage, waitMillisecondsDelay);
-            UserSurpriseImage = await WaitAndCaptureEmotionAsync("LA SURPRISE", UserSurpriseImage, waitMillisecondsDelay);
+            await WaitAndCaptureEmotionAsync("LA TRISTESSE", waitMillisecondsDelay, Emotion.Sadness);
+
+            await WaitAndCaptureEmotionAsync("LA COLÈRE", waitMillisecondsDelay, Emotion.Anger);
+
+            await WaitAndCaptureEmotionAsync("LA SURPRISE", waitMillisecondsDelay, Emotion.Surprise);
 
             await Task.Delay(2000);
 
             CurrentState = State.GameEnded;
         }
 
-        private async Task<ImageSource> WaitAndCaptureEmotionAsync(string emotionName, ImageSource image, int waitMillisecondsDelay)
+        private async Task WaitAndCaptureEmotionAsync(string emotionName, int waitMillisecondsDelay, Emotion emotion)
         {
             Instructions = null;
             await Task.Delay(1000);
@@ -394,16 +445,68 @@ namespace ActorStudio
             ImageCaptured?.Invoke(this, null);
             // Store the captured image
             BitmapImage originalBitmap = new BitmapImage();
+
+            string filePath;
+
             await _dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
             {
-                var photoFile = await KnownFolders.PicturesLibrary.CreateFileAsync(Constants.PHOTO_FILE_NAME, CreationCollisionOption.GenerateUniqueName);
+                StorageFile photoFile = await KnownFolders.PicturesLibrary.CreateFileAsync(Constants.PHOTO_FILE_NAME, CreationCollisionOption.GenerateUniqueName);
                 await _faceTrackingControl.CaptureFaceToFileAsync(photoFile);
                 var fileStream = await photoFile.OpenReadAsync();
-                var streamCompare = fileStream.CloneStream();
-                originalBitmap.SetSource(streamCompare);
+                var imageStream = fileStream.CloneStream();
+                var scoreStream = fileStream.CloneStream();
+
+                originalBitmap.SetSource(imageStream);
+                filePath = photoFile.Path;
+
+                switch (emotion)
+                {
+                    case Emotion.Hapiness:
+                        UserHappinessImage = originalBitmap;
+                        break;
+                    case Emotion.Surprise:
+                        UserSurpriseImage = originalBitmap;
+                        break;
+                    case Emotion.Sadness:
+                        UserSadnessImage = originalBitmap;
+                        break;
+                    case Emotion.Anger:
+                        UserAngerImage = originalBitmap;
+                        break;
+                    default:
+                        break;
+                }
+
+                var emotionScore = await DetectEmotionAsync(scoreStream);
+                if (emotionScore != null)
+                {
+                    switch (emotion)
+                    {
+                        case Emotion.Hapiness:
+                            HapinessScore = $"{Math.Round(emotionScore.Happiness * 100, 0)}%";
+                            break;
+                        case Emotion.Surprise:
+                            SupriseScore = $"{Math.Round(emotionScore.Surprise * 100, 0)}%";
+                            break;
+                        case Emotion.Sadness:
+                            SadnessScore = $"{Math.Round(emotionScore.Sadness * 100, 0)}%";
+                            break;
+                        case Emotion.Anger:
+                            AngerScore = $"{Math.Round(emotionScore.Anger * 100, 0)}%";
+                            break;
+                        default:
+                            break;
+                    }
+                }
             });
             Instructions = null;
-            return originalBitmap;
+        }
+
+        private async Task<EmotionScores> DetectEmotionAsync(IRandomAccessStream photoStream)
+        {
+            var requiredFaceAttributes = new FaceAttributeType[] { FaceAttributeType.Emotion };
+            var attributes = await FaceApiHelper.DetectEmotionsAsync(_faceClient, photoStream.AsStream(), requiredFaceAttributes);
+            return attributes?.Emotion;
         }
 
         private async void DisplayResultsAsync()
@@ -425,6 +528,14 @@ namespace ActorStudio
                 UserSurpriseImage = null;
                 this.CurrentState = State.Idle;
             });
+        }
+
+        private enum Emotion
+        {
+            Hapiness,
+            Surprise,
+            Sadness,
+            Anger
         }
     }
 }

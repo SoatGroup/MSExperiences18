@@ -191,6 +191,8 @@
                     <RowDefinition Height="8*"/>
                     <RowDefinition Height="2*"/>
                 </Grid.RowDefinitions>
+                
+                <!--Hapiness-->
                 <Image
                     Grid.Column="1"
                     Grid.Row="1"
@@ -198,6 +200,25 @@
                     Style="{StaticResource UserCapturedImageStyle}"
                     Source="{x:Bind GameStateMachineVM.UserHappinessImage, Mode=OneWay}"
                     />
+                <Grid 
+                    Grid.Column="1"
+                    Grid.Row="1"
+                    VerticalAlignment="Bottom"
+                    HorizontalAlignment="Right">
+                    <Ellipse Width="94" Height="94" Fill="Yellow"
+                             Stroke="Black"
+                             StrokeThickness="2"/>
+                    <Image Width="107" Height="107"
+                           Source="ms-appx:///Assets/round.svg"
+                           Grid.ColumnSpan="3"/>
+                    <TextBlock Text="{x:Bind GameStateMachineVM.HapinessScore, Mode=OneWay}"
+                               FontWeight="Bold"
+                               FontSize="37"
+                               VerticalAlignment="Center" HorizontalAlignment="Center"
+                               Grid.ColumnSpan="3"/>
+                </Grid>
+
+                <!--Sadness-->
                 <Image
                     Grid.Column="3"
                     Grid.Row="1"
@@ -205,6 +226,25 @@
                     Style="{StaticResource UserCapturedImageStyle}"
                     Source="{x:Bind GameStateMachineVM.UserSadnessImage, Mode=OneWay}"
                     />
+                <Grid 
+                    Grid.Column="3"
+                    Grid.Row="1"
+                    VerticalAlignment="Bottom"
+                    HorizontalAlignment="Right">
+                    <Ellipse Width="94" Height="94" Fill="Yellow"
+                             Stroke="Black"
+                             StrokeThickness="2"/>
+                    <Image Width="107" Height="107"
+                           Source="ms-appx:///Assets/round.svg"
+                           Grid.ColumnSpan="3"/>
+                    <TextBlock Text="{x:Bind GameStateMachineVM.SadnessScore, Mode=OneWay}"
+                               FontWeight="Bold"
+                               FontSize="37"
+                               VerticalAlignment="Center" HorizontalAlignment="Center"
+                               Grid.ColumnSpan="3"/>
+                </Grid>
+                
+                <!--Anger-->
                 <Image
                     Grid.Column="1"
                     Grid.Row="3"
@@ -212,6 +252,25 @@
                     Style="{StaticResource UserCapturedImageStyle}"
                     Source="{x:Bind GameStateMachineVM.UserAngerImage, Mode=OneWay}"
                     />
+                <Grid 
+                    Grid.Column="1"
+                    Grid.Row="3"
+                    VerticalAlignment="Bottom"
+                    HorizontalAlignment="Right">
+                    <Ellipse Width="94" Height="94" Fill="Yellow"
+                             Stroke="Black"
+                             StrokeThickness="2"/>
+                    <Image Width="107" Height="107"
+                           Source="ms-appx:///Assets/round.svg"
+                           Grid.ColumnSpan="3"/>
+                    <TextBlock Text="{x:Bind GameStateMachineVM.AngerScore, Mode=OneWay}"
+                               FontWeight="Bold"
+                               FontSize="37"
+                               VerticalAlignment="Center" HorizontalAlignment="Center"
+                               Grid.ColumnSpan="3"/>
+                </Grid>
+                
+                <!--Surprise-->
                 <Image
                     Grid.Column="3"
                     Grid.Row="3"
@@ -219,6 +278,24 @@
                     Style="{StaticResource UserCapturedImageStyle}"
                     Source="{x:Bind GameStateMachineVM.UserSurpriseImage, Mode=OneWay}"
                     />
+                <Grid 
+                    Grid.Column="3"
+                    Grid.Row="3"
+                    VerticalAlignment="Bottom"
+                    HorizontalAlignment="Right">
+                    <Ellipse Width="94" Height="94" Fill="Yellow"
+                             Stroke="Black"
+                             StrokeThickness="2"/>
+                    <Image Width="107" Height="107"
+                           Source="ms-appx:///Assets/round.svg"
+                           Grid.ColumnSpan="3"/>
+                    <TextBlock Text="{x:Bind GameStateMachineVM.SupriseScore, Mode=OneWay}"
+                               FontWeight="Bold"
+                               FontSize="37"
+                               VerticalAlignment="Center" HorizontalAlignment="Center"
+                               Grid.ColumnSpan="3"/>
+                </Grid>
+                
                 <Image 
                     Grid.Row="5"
                     Grid.ColumnSpan="5"

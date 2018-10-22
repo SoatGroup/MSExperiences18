@@ -252,5 +252,11 @@ namespace FaceApiProxy
             return response;
         }
         #endregion Person
+
+        public static async Task<FaceAttributes> DetectEmotionsAsync(FaceServiceClient faceClient, Stream faceStream, FaceAttributeType[] requiredFaceAttributes)
+        {
+            var response = await faceClient.DetectAsync(faceStream, true, true, requiredFaceAttributes);
+            return response?.FirstOrDefault()?.FaceAttributes;
+        }
     }
 }
