@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.Search;
@@ -30,6 +29,17 @@ namespace ActorStudio
             var matchFile = imgFiles.First();
             IRandomAccessStream photoStream = await matchFile.OpenReadAsync();
             return photoStream;
+        }
+
+        internal static async Task CleanFaceCapturesAsync()
+        {
+            var files = await KnownFolders.PicturesLibrary.GetFilesAsync();
+            Regex pattern = new Regex(@"\bphoto(\s*\([0-9]*\)*.)*\.jpg\b");
+            var facePictures = files.Where(f => pattern.Match(f.Name).Success);
+            foreach (var facePicture in facePictures)
+            {
+                await facePicture.DeleteAsync();
+            }
         }
     }
 }

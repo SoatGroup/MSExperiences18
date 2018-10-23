@@ -170,7 +170,7 @@ namespace ActorStudio
         #endregion Face Matching Images
 
         #region User Captured Images and Scores
-                
+
         private ImageSource _userHappinessImage;
         public ImageSource UserHappinessImage
         {
@@ -192,7 +192,7 @@ namespace ActorStudio
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(UserSadnessImage)));
             }
         }
-        
+
         private ImageSource _userAngerImage;
         public ImageSource UserAngerImage
         {
@@ -421,7 +421,7 @@ namespace ActorStudio
 
             Instructions = $"Tu vas devoir nous jouer {Environment.NewLine} plusieurs émotions {Environment.NewLine} Prêt ?";
             await Task.Delay(waitMillisecondsDelay);
-            
+
             await WaitAndCaptureEmotionAsync("LA JOIE", waitMillisecondsDelay, Emotion.Hapiness);
 
             await WaitAndCaptureEmotionAsync("LA TRISTESSE", waitMillisecondsDelay, Emotion.Sadness);
@@ -526,6 +526,10 @@ namespace ActorStudio
                 UserSadnessImage = null;
                 UserAngerImage = null;
                 UserSurpriseImage = null;
+
+                // Clean all Files
+                await PicturesHelper.CleanFaceCapturesAsync();
+
                 this.CurrentState = State.Idle;
             });
         }
