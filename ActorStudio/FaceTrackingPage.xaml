@@ -59,12 +59,12 @@
             VerticalAlignment="Stretch"
             HorizontalAlignment="Center">
             <TextBlock Name="tbInstructions"
-                       FontSize="100"
-                       TextAlignment="Center"
-                       Text="{x:Bind GameStateMachineVM.Instructions, Mode=OneWay}"
-                       VerticalAlignment="Top"
-                       HorizontalAlignment="Center"
-                       Foreground="Yellow"/>
+                        FontSize="100"
+                        TextAlignment="Center"
+                        Text="{x:Bind GameStateMachineVM.Instructions, Mode=OneWay}"
+                        VerticalAlignment="Top"
+                        HorizontalAlignment="Center"
+                        Foreground="Yellow"/>
             <Grid HorizontalAlignment="Center"
                   Visibility="{x:Bind GameStateMachineVM.IsFaceMatchVisible, Mode=OneWay}"
                   Width="830"

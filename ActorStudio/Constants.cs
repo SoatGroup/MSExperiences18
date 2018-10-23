@@ -9,7 +9,7 @@
         public const string _celebFacesListName = "Series";
         public const string _celebFacesGroupFolder = "Series";
 
-        public const int BigFaceSizeThreshold = 50000;
+        public const int BigFaceSizeThreshold = 30000;
 
         public const string PHOTO_FILE_NAME = "photo.jpg";
     }

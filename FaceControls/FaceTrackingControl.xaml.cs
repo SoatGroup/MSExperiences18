@@ -27,6 +27,8 @@ namespace FaceControls
 {
     public sealed partial class FaceTrackingControl : UserControl
     {
+        private const double _screenRatio = 1.78;
+
         private readonly DisplayInformation _displayInformation = DisplayInformation.GetForCurrentView();
         private DisplayOrientations _displayOrientation = DisplayOrientations.Portrait;
         private FaceDetectionEffect _faceDetectionEffect;
@@ -78,7 +80,12 @@ namespace FaceControls
 
                 // Use default initialization
                 MediaCapture = new MediaCapture();
-                await MediaCapture.InitializeAsync();
+                MediaCaptureInitializationSettings settings = new MediaCaptureInitializationSettings()
+                {
+                    StreamingCaptureMode = StreamingCaptureMode.Video,
+
+                };
+                await MediaCapture.InitializeAsync(settings);
 
                 // Set callbacks for failure and recording limit exceeded
                 Status = "Device successfully initialized for video recording!";
@@ -89,6 +96,15 @@ namespace FaceControls
                 PreviewControl.FlowDirection = _mirroringPreview ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
                 // Also mirror the canvas if the preview is being mirrored
                 FacesCanvas.FlowDirection = _mirroringPreview ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
+
+
+                // Query all properties of the specified stream type 
+                var props = MediaCapture.VideoDeviceController.GetAvailableMediaStreamProperties(MediaStreamType.VideoPreview);
+                IEnumerable<StreamResolution> allStreamProperties = props.Select(x => new StreamResolution(x));
+                // Order them by resolution then frame rate
+                allStreamProperties = allStreamProperties.Where(p => p.AspectRatio == _screenRatio).OrderByDescending(x => x.FrameRate).ThenByDescending(x => x.Height * x.Width);
+                await MediaCapture.VideoDeviceController.SetMediaStreamPropertiesAsync(MediaStreamType.VideoPreview, allStreamProperties.First().EncodingProperties);
+
 
                 await MediaCapture.StartPreviewAsync();
                 _previewProperties = MediaCapture.VideoDeviceController.GetMediaStreamProperties(MediaStreamType.VideoPreview) as VideoEncodingProperties;

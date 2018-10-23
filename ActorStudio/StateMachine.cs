@@ -116,7 +116,7 @@ namespace ActorStudio
                             break;
                         case State.CheckingSmile:
                             _faceTrackingControl.IsCheckSmileEnabled = true;
-                            Instructions = $"Ok, pour commencer,{Environment.NewLine}fais moi un sourire";
+                            Instructions = $"Pour commencer à jouer{Environment.NewLine}fais moi un sourire";
                             break;
                         case State.FaceRecognition:
                             _faceTrackingControl.StopFaceTracking();
@@ -521,9 +521,17 @@ namespace ActorStudio
 
         private async Task<EmotionScores> DetectEmotionAsync(IRandomAccessStream photoStream)
         {
-            var requiredFaceAttributes = new FaceAttributeType[] { FaceAttributeType.Emotion };
-            var attributes = await FaceApiHelper.DetectEmotionsAsync(_faceClient, photoStream.AsStream(), requiredFaceAttributes);
-            return attributes?.Emotion;
+            try
+            {
+                var requiredFaceAttributes = new FaceAttributeType[] { FaceAttributeType.Emotion };
+                var attributes = await FaceApiHelper.DetectEmotionsAsync(_faceClient, photoStream.AsStream(), requiredFaceAttributes);
+                return attributes?.Emotion;
+            }
+            catch (Exception e)
+            {
+                // Hide exception and return null
+                return null;
+            }
         }
 
         private async void DisplayResultsAsync()
@@ -533,7 +541,7 @@ namespace ActorStudio
                 IsEmotionsResultsVisible = true;
                 AllEmotionsCaptured?.Invoke(this, null);
                 IsEmotionsCaptureVisible = false;
-                await Task.Delay(15000);
+                await Task.Delay(10000);
 
                 IsEmotionsResultsVisible = false;
                 IsEmotionsCaptureVisible = false;

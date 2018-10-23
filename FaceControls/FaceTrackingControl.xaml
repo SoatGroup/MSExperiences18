@@ -10,7 +10,7 @@
     d:DesignWidth="400">
     <Grid>
         <!--Camera preview-->
-        <CaptureElement Name="PreviewControl" Stretch="Uniform"/>
+        <CaptureElement Name="PreviewControl" Stretch="UniformToFill" RenderTransformOrigin="0.5,0.5"/>
         <!--Canvas that will host the face detection bounding boxes, will share the same bounds as the preview within the CaptureElement-->
         <Canvas Name="FacesCanvas" RenderTransformOrigin="0.5,0.5"/>
     </Grid>
