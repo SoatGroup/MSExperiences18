@@ -169,7 +169,15 @@
                     Source="{x:Bind GameStateMachineVM.UserSurpriseImage, Mode=OneWay}"/>
             </Border>
         </Grid>
-        
+
+        <TextBlock Name="timerText"
+                   Text="{x:Bind GameStateMachineVM.TimerDisplay, Mode=OneWay}"
+                       Opacity=".5"
+                       FontSize="200"
+                       FontWeight="Bold"
+                       HorizontalAlignment="Center" VerticalAlignment="Center"
+                       Foreground="WhiteSmoke"/>
+
         <!--Result panel-->
         <Grid x:Name="EmotionsResultsGrid" 
               Visibility="{x:Bind GameStateMachineVM.IsEmotionsResultsVisible, Mode=OneWay}">
@@ -191,7 +199,7 @@
                     <RowDefinition Height="8*"/>
                     <RowDefinition Height="2*"/>
                 </Grid.RowDefinitions>
-                
+
                 <!--Hapiness-->
                 <Image
                     Grid.Column="1"
@@ -243,7 +251,7 @@
                                VerticalAlignment="Center" HorizontalAlignment="Center"
                                Grid.ColumnSpan="3"/>
                 </Grid>
-                
+
                 <!--Anger-->
                 <Image
                     Grid.Column="1"
@@ -269,7 +277,7 @@
                                VerticalAlignment="Center" HorizontalAlignment="Center"
                                Grid.ColumnSpan="3"/>
                 </Grid>
-                
+
                 <!--Surprise-->
                 <Image
                     Grid.Column="3"
@@ -295,7 +303,7 @@
                                VerticalAlignment="Center" HorizontalAlignment="Center"
                                Grid.ColumnSpan="3"/>
                 </Grid>
-                
+
                 <Image 
                     Grid.Row="5"
                     Grid.ColumnSpan="5"

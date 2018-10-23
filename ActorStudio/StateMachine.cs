@@ -260,6 +260,20 @@ namespace ActorStudio
         }
 
         #endregion User Captured Images and Scores
+        
+        private Timer _timer;
+        private const int _emotionCaptureDelayInSeconds = 5;
+        private int _invokeTimerCount = 0;
+        private string _timerDisplay;
+        public string TimerDisplay
+        {
+            get => _timerDisplay;
+            set
+            {
+                _timerDisplay = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TimerDisplay)));
+            }
+        }
 
         public StateMachine()
         {
@@ -422,25 +436,28 @@ namespace ActorStudio
             Instructions = $"Tu vas devoir nous jouer {Environment.NewLine} plusieurs émotions {Environment.NewLine} Prêt ?";
             await Task.Delay(waitMillisecondsDelay);
 
-            await WaitAndCaptureEmotionAsync("LA JOIE", waitMillisecondsDelay, Emotion.Hapiness);
+            var captureTimerDelay = TimeSpan.FromSeconds(_emotionCaptureDelayInSeconds);
 
-            await WaitAndCaptureEmotionAsync("LA TRISTESSE", waitMillisecondsDelay, Emotion.Sadness);
+            await WaitAndCaptureEmotionAsync("LA JOIE", captureTimerDelay, Emotion.Hapiness);
 
-            await WaitAndCaptureEmotionAsync("LA COLÈRE", waitMillisecondsDelay, Emotion.Anger);
+            await WaitAndCaptureEmotionAsync("LA TRISTESSE", captureTimerDelay, Emotion.Sadness);
 
-            await WaitAndCaptureEmotionAsync("LA SURPRISE", waitMillisecondsDelay, Emotion.Surprise);
+            await WaitAndCaptureEmotionAsync("LA COLÈRE", captureTimerDelay, Emotion.Anger);
+
+            await WaitAndCaptureEmotionAsync("LA SURPRISE", captureTimerDelay, Emotion.Surprise);
 
             await Task.Delay(2000);
 
             CurrentState = State.GameEnded;
         }
 
-        private async Task WaitAndCaptureEmotionAsync(string emotionName, int waitMillisecondsDelay, Emotion emotion)
+        private async Task WaitAndCaptureEmotionAsync(string emotionName, TimeSpan waitDelay, Emotion emotion)
         {
             Instructions = null;
             await Task.Delay(1000);
             Instructions = $"- {emotionName.ToUpper()} -";
-            await Task.Delay(waitMillisecondsDelay);
+            StartCaptureTimer();
+            await Task.Delay(waitDelay);
             // Capture image
             ImageCaptured?.Invoke(this, null);
             // Store the captured image
@@ -532,6 +549,27 @@ namespace ActorStudio
 
                 this.CurrentState = State.Idle;
             });
+        }
+
+        private void StartCaptureTimer()
+        {
+            _invokeTimerCount = 0;
+            _timer = new Timer(TimerCallBack, null, TimeSpan.FromSeconds(0), TimeSpan.FromSeconds(1));
+        }
+
+        private async void TimerCallBack(object state)
+        {
+            if (_invokeTimerCount >= _emotionCaptureDelayInSeconds)
+            {
+                await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => { TimerDisplay = null; });
+                _timer.Dispose();
+            }
+            else
+            {
+                var remainingSeconds = _emotionCaptureDelayInSeconds - _invokeTimerCount;
+                await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => { TimerDisplay = remainingSeconds.ToString(); });
+                _invokeTimerCount++;
+            }
         }
 
         private enum Emotion
