@@ -1,6 +1,7 @@
 ﻿using FaceApiProxy;
 using Microsoft.ProjectOxford.Common.Contract;
 using Microsoft.ProjectOxford.Face;
+using Microsoft.Toolkit.Uwp.Connectivity;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -8,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Windows.Graphics.Imaging;
 using Windows.Media.FaceAnalysis;
 using Windows.Storage;
 using Windows.Storage.Streams;
@@ -142,6 +144,26 @@ namespace ActorStudio
             }
         }
 
+        internal async Task EndGameAsync()
+        {
+            IsEmotionsResultsVisible = false;
+            IsEmotionsCaptureVisible = false;
+
+            UserHappinessImage = null;
+            UserSadnessImage = null;
+            UserAngerImage = null;
+            UserSurpriseImage = null;
+
+            ResultImage = null;
+
+            // Clean all Files
+            await PicturesHelper.CleanFaceCapturesAsync();
+
+            await Task.Delay(3000);
+
+            this.CurrentState = State.Idle;
+        }
+
         #region Face Matching Images
 
         private ImageSource _recognizedFaceImage;
@@ -259,12 +281,24 @@ namespace ActorStudio
             }
         }
 
+        private ImageSource _resultImage;
+        public ImageSource ResultImage
+        {
+            get => _resultImage;
+            set
+            {
+                _resultImage = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ResultImage)));
+            }
+        }
+
         #endregion User Captured Images and Scores
-        
+
         private Timer _timer;
-        private const int _emotionCaptureDelayInSeconds = 5;
+        private const int _emotionCaptureDelayInSeconds = 3;
         private int _invokeTimerCount = 0;
         private string _timerDisplay;
+
         public string TimerDisplay
         {
             get => _timerDisplay;
@@ -303,7 +337,7 @@ namespace ActorStudio
             });
         }
 
-        public async Task StartFaceRecognizedAsync(IRandomAccessStream originalStream, IdentifiedFace match)
+        public async Task StartFaceRecognizedAsync(IdentifiedFace match)
         {
             if (match == null)
             {
@@ -342,7 +376,7 @@ namespace ActorStudio
         public async void FaceTrackingControl_FaceDetected(Windows.Media.Core.FaceDetectionEffect sender, Windows.Media.Core.FaceDetectedEventArgs args)
         {
             var areBigFacesDetected = CheckBigFaces(args.ResultFrame.DetectedFaces);
-            await _dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            await _dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
                 {
                     if (CurrentState == State.FacesDetection)
                     {
@@ -372,26 +406,46 @@ namespace ActorStudio
                             // careful to multiple facetracking
                             CurrentState = State.FacesDetection;
                         }
+                        else if (NetworkHelper.Instance.ConnectionInformation.IsInternetAvailable == false)
+                        {
+                            var biggestFace = args.ResultFrame.DetectedFaces.OrderByDescending(f => f.FaceBox.Height * f.FaceBox.Width).First();
+                            await StartFaceRecognitionAsync(biggestFace.FaceBox);
+                        }
                     }
                 });
         }
 
-        private async void FaceTrackingControl_SmileDetected(object sender, Microsoft.ProjectOxford.Face.Contract.Face args)
+        private async void FaceTrackingControl_SmileDetected(object sender, Microsoft.ProjectOxford.Face.Contract.Face face)
         {
             if (CurrentState == State.CheckingSmile && isCheckingSmile != 1)
             {
-                await _dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
+                var facebox = new BitmapBounds()
                 {
-                    ImageCaptured?.Invoke(this, null);
+                    Height = (uint)face.FaceRectangle.Height,
+                    Width = (uint)face.FaceRectangle.Width,
+                    X = (uint)face.FaceRectangle.Left,
+                    Y = (uint)face.FaceRectangle.Top
+                };
+                await StartFaceRecognitionAsync(facebox);
+            }
+        }
 
-                    CurrentState = State.FaceRecognition;
+        private async Task StartFaceRecognitionAsync(BitmapBounds facebox)
+        {
+            await _dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
+            {
+                ImageCaptured?.Invoke(this, null);
 
-                    // 0 indicates that the method is not in use.
-                    if (0 == Interlocked.Exchange(ref isCheckingSmile, 1))
+                CurrentState = State.FaceRecognition;
+
+                // 0 indicates that the method is not in use.
+                if (0 == Interlocked.Exchange(ref isCheckingSmile, 1))
+                {
+                    if (NetworkHelper.Instance.ConnectionInformation.IsInternetAvailable)
                     {
                         //store the captured image
                         var photoFile = await KnownFolders.PicturesLibrary.CreateFileAsync(Constants.PHOTO_FILE_NAME, CreationCollisionOption.GenerateUniqueName);
-                        await _faceTrackingControl.CaptureFaceToFileAsync(photoFile, args.FaceRectangle);
+                        await _faceTrackingControl.CaptureFaceToFileAsync(photoFile, facebox);
                         var fileStream = await photoFile.OpenReadAsync();
                         var streamCompare = fileStream.CloneStream();
                         BitmapImage originalBitmap = new BitmapImage();
@@ -402,12 +456,16 @@ namespace ActorStudio
 
                         var streamCheck = fileStream.CloneStream().AsStream();
                         var match = await FaceDatasetHelper.CheckGroupAsync(_faceClient, streamCheck, Constants._celebFacesListId, Constants._celebFacesGroupFolder);
-                        await StartFaceRecognizedAsync(streamCompare, match);
-                        Interlocked.Exchange(ref isCheckingSmile, 0);
+                        await StartFaceRecognizedAsync(match);
                     }
-                    IsFaceMatchingRunning = false;
-                });
-            }
+                    else
+                    {
+                        await StartFaceRecognizedAsync(null);
+                    }
+                    Interlocked.Exchange(ref isCheckingSmile, 0);
+                }
+                IsFaceMatchingRunning = false;
+            });
         }
 
         private bool CheckBigFaces(IReadOnlyList<DetectedFace> detectedFaces)
@@ -541,21 +599,7 @@ namespace ActorStudio
                 IsEmotionsResultsVisible = true;
                 AllEmotionsCaptured?.Invoke(this, null);
                 IsEmotionsCaptureVisible = false;
-                await Task.Delay(10000);
-
-                IsEmotionsResultsVisible = false;
-                IsEmotionsCaptureVisible = false;
-                await Task.Delay(3000);
-
-                UserHappinessImage = null;
-                UserSadnessImage = null;
-                UserAngerImage = null;
-                UserSurpriseImage = null;
-
-                // Clean all Files
-                await PicturesHelper.CleanFaceCapturesAsync();
-
-                this.CurrentState = State.Idle;
+                this.CurrentState = State.WaitForPrint;
             });
         }
 

@@ -1,9 +1,15 @@
-﻿using System;
+﻿using Microsoft.Toolkit.Uwp.Helpers;
+using System;
+using System.IO;
 using System.Numerics;
+using System.Threading.Tasks;
+using Windows.Graphics.Display;
+using Windows.Storage;
 using Windows.UI.Composition;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Hosting;
 using Windows.UI.Xaml.Media.Animation;
+using Windows.UI.Xaml.Media.Imaging;
 
 namespace ActorStudio
 {
@@ -13,6 +19,7 @@ namespace ActorStudio
     public sealed partial class FaceTrackingPage : Page
     {
         private Compositor _compositor;
+        PrintHelper printHelper;
 
         public StateMachine GameStateMachineVM { get; set; }
 
@@ -45,8 +52,9 @@ namespace ActorStudio
             flashStoryboard.Begin();
         }
 
-        private void GameStateMachineVM_AllEmotionsCaptured(object sender, EventArgs e)
+        private async void GameStateMachineVM_AllEmotionsCaptured(object sender, EventArgs e)
         {
+            //Start animations
             var hapinessAnimation = ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("displayHapinessResultAnimation", UserHappinessImage);
             hapinessAnimation.TryStart(UserHappinessResultImage);
 
@@ -58,6 +66,39 @@ namespace ActorStudio
 
             var surpriseAnimation = ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("displaySurpriseAnimation", UserSurpriseImage);
             surpriseAnimation.TryStart(UserSurpriseResultImage);
+
+            // Wait for the animation to complete
+            await Task.Delay(2000);
+
+            await SaveResultImageAsync();
+            await SendResultToPrinterAsync();
+        }
+
+        private async Task SendResultToPrinterAsync()
+        {
+            printHelper = new PrintHelper(PhotoboothImageGrid);
+            printHelper.OnPrintCanceled += PrintHelper_OnPrintTaskFinished;
+            printHelper.OnPrintFailed += PrintHelper_OnPrintTaskFinished;
+            printHelper.OnPrintSucceeded += PrintHelper_OnPrintTaskFinished;
+            await printHelper.ShowPrintUIAsync("Soat - ActorStudio", true);
+        }
+
+        private async Task SaveResultImageAsync()
+        {
+            var rtb = new RenderTargetBitmap();
+            await rtb.RenderAsync(EmotionsResultsGrid);
+
+            var pixelBuffer = await rtb.GetPixelsAsync();
+
+            var displayInformation = DisplayInformation.GetForCurrentView();
+            var file = await PicturesHelper.SaveResultBufferAsync(pixelBuffer, rtb.PixelWidth, rtb.PixelHeight, displayInformation.RawDpiX, displayInformation.RawDpiY);
+          
+            PhotoboothImage.Source = new BitmapImage(new Uri(file.Path));
+        }
+
+        private async void PrintHelper_OnPrintTaskFinished()
+        {
+            await this.GameStateMachineVM.EndGameAsync();
         }
     }
 }

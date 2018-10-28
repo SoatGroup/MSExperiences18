@@ -7,6 +7,7 @@
         CheckingSmile,
         FaceRecognition,
         EmotionsCaptures,
-        GameEnded
+        GameEnded,
+        WaitForPrint
     }
 }

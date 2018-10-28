@@ -3,6 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:ActorStudio"
+    xmlns:controls="using:ActorStudio.Controls"
     xmlns:faceControls="using:FaceControls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -179,137 +180,113 @@
                        Foreground="WhiteSmoke"/>
 
         <!--Result panel-->
-        <Grid x:Name="EmotionsResultsGrid" 
-              Visibility="{x:Bind GameStateMachineVM.IsEmotionsResultsVisible, Mode=OneWay}">
-            <Grid Width="700" Background="White"
-                  Margin="30">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="2*"/>
-                    <ColumnDefinition Width="10*"/>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="10*"/>
-                    <ColumnDefinition Width="2*"/>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="2*"/>
-                    <RowDefinition Height="10*"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="10*"/>
-                    <RowDefinition Height="2*"/>
-                    <RowDefinition Height="8*"/>
-                    <RowDefinition Height="2*"/>
-                </Grid.RowDefinitions>
+        <Viewbox x:Name="EmotionsResultsViewBox"
+                 Visibility="{x:Bind GameStateMachineVM.IsEmotionsResultsVisible, Mode=OneWay}"                 
+                  Margin="20">
+            <Grid Height="560" Width="378">
 
-                <!--Hapiness-->
-                <Image
-                    Grid.Column="1"
-                    Grid.Row="1"
-                    x:Name="UserHappinessResultImage"
-                    Style="{StaticResource UserCapturedImageStyle}"
-                    Source="{x:Bind GameStateMachineVM.UserHappinessImage, Mode=OneWay}"
-                    />
-                <Grid 
-                    Grid.Column="1"
-                    Grid.Row="1"
-                    VerticalAlignment="Bottom"
-                    HorizontalAlignment="Right">
-                    <Ellipse Width="94" Height="94" Fill="Yellow"
-                             Stroke="Black"
-                             StrokeThickness="2"/>
-                    <Image Width="107" Height="107"
-                           Source="ms-appx:///Assets/round.svg"
-                           Grid.ColumnSpan="3"/>
-                    <TextBlock Text="{x:Bind GameStateMachineVM.HapinessScore, Mode=OneWay}"
-                               FontWeight="Bold"
-                               FontSize="37"
-                               VerticalAlignment="Center" HorizontalAlignment="Center"
-                               Grid.ColumnSpan="3"/>
+                <Grid Background="White" 
+                      x:Name="EmotionsResultsGrid">
+                    <!--Width="700"-->
+                    <!--Height="1036"-->
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="10*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="10*"/>
+                        <ColumnDefinition Width="2*"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="2*"/>
+                        <RowDefinition Height="10*"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="10*"/>
+                        <RowDefinition Height="2*"/>
+                        <RowDefinition Height="8*"/>
+                        <RowDefinition Height="2*"/>
+                    </Grid.RowDefinitions>
+
+                    <!--Hapiness-->
+                    <Image
+                        Grid.Column="1"
+                        Grid.Row="1"
+                        x:Name="UserHappinessResultImage"
+                        Style="{StaticResource UserCapturedImageStyle}"
+                        Source="{x:Bind GameStateMachineVM.UserHappinessImage, Mode=OneWay}"
+                        />
+                    <controls:ScoreControl
+                        Margin="0 0 -12 -12"
+                        Text="LA JOIE"
+                        Score="{x:Bind GameStateMachineVM.HapinessScore, Mode=OneWay}"
+                        Grid.Column="1"
+                        Grid.Row="1"
+                        VerticalAlignment="Bottom"
+                        HorizontalAlignment="Right"/>
+
+                    <!--Sadness-->
+                    <Image
+                        Grid.Column="3"
+                        Grid.Row="1"
+                        x:Name="UserSadnessResultImage"
+                        Style="{StaticResource UserCapturedImageStyle}"
+                        Source="{x:Bind GameStateMachineVM.UserSadnessImage, Mode=OneWay}"
+                        />
+                    <controls:ScoreControl
+                        Margin="0 0 -12 -12"
+                        Text="LA TRISTESSE"
+                        Score="{x:Bind GameStateMachineVM.SadnessScore, Mode=OneWay}"
+                        Grid.Column="3"
+                        Grid.Row="1"
+                        VerticalAlignment="Bottom"
+                        HorizontalAlignment="Right"/>
+
+                    <!--Anger-->
+                    <Image
+                        Grid.Column="1"
+                        Grid.Row="3"
+                        x:Name="UserAngerResultImage"
+                        Style="{StaticResource UserCapturedImageStyle}"
+                        Source="{x:Bind GameStateMachineVM.UserAngerImage, Mode=OneWay}"
+                        />
+                    <controls:ScoreControl
+                        Margin="0 0 -12 -12"
+                        Text="LA COLÈRE"
+                        Score="{x:Bind GameStateMachineVM.AngerScore, Mode=OneWay}"
+                        Grid.Column="1"
+                        Grid.Row="3"
+                        VerticalAlignment="Bottom"
+                        HorizontalAlignment="Right"/>
+
+                    <!--Surprise-->
+                    <Image
+                        Grid.Column="3"
+                        Grid.Row="3"
+                        x:Name="UserSurpriseResultImage"
+                        Style="{StaticResource UserCapturedImageStyle}"
+                        Source="{x:Bind GameStateMachineVM.UserSurpriseImage, Mode=OneWay}"
+                        />
+                    <controls:ScoreControl
+                        Margin="0 0 -12 -12"
+                        Text="LA SUPRISE"
+                        Score="{x:Bind GameStateMachineVM.SupriseScore, Mode=OneWay}"
+                        Grid.Column="3"
+                        Grid.Row="3"
+                        VerticalAlignment="Bottom"
+                        HorizontalAlignment="Right"/>
+
+                    <Image 
+                        Grid.Row="5"
+                        Grid.ColumnSpan="5"
+                        Source="ms-appx:///Assets/logo-SOAT-300dpi.png"/>
                 </Grid>
 
-                <!--Sadness-->
-                <Image
-                    Grid.Column="3"
-                    Grid.Row="1"
-                    x:Name="UserSadnessResultImage"
-                    Style="{StaticResource UserCapturedImageStyle}"
-                    Source="{x:Bind GameStateMachineVM.UserSadnessImage, Mode=OneWay}"
-                    />
-                <Grid 
-                    Grid.Column="3"
-                    Grid.Row="1"
-                    VerticalAlignment="Bottom"
-                    HorizontalAlignment="Right">
-                    <Ellipse Width="94" Height="94" Fill="Yellow"
-                             Stroke="Black"
-                             StrokeThickness="2"/>
-                    <Image Width="107" Height="107"
-                           Source="ms-appx:///Assets/round.svg"
-                           Grid.ColumnSpan="3"/>
-                    <TextBlock Text="{x:Bind GameStateMachineVM.SadnessScore, Mode=OneWay}"
-                               FontWeight="Bold"
-                               FontSize="37"
-                               VerticalAlignment="Center" HorizontalAlignment="Center"
-                               Grid.ColumnSpan="3"/>
+                <Grid x:Name="PhotoboothImageGrid">
+                    <Image x:Name="PhotoboothImage"
+                           Source="{x:Bind GameStateMachineVM.ResultImage, Mode=TwoWay}"
+                           Stretch="Fill"/>
                 </Grid>
-
-                <!--Anger-->
-                <Image
-                    Grid.Column="1"
-                    Grid.Row="3"
-                    x:Name="UserAngerResultImage"
-                    Style="{StaticResource UserCapturedImageStyle}"
-                    Source="{x:Bind GameStateMachineVM.UserAngerImage, Mode=OneWay}"
-                    />
-                <Grid 
-                    Grid.Column="1"
-                    Grid.Row="3"
-                    VerticalAlignment="Bottom"
-                    HorizontalAlignment="Right">
-                    <Ellipse Width="94" Height="94" Fill="Yellow"
-                             Stroke="Black"
-                             StrokeThickness="2"/>
-                    <Image Width="107" Height="107"
-                           Source="ms-appx:///Assets/round.svg"
-                           Grid.ColumnSpan="3"/>
-                    <TextBlock Text="{x:Bind GameStateMachineVM.AngerScore, Mode=OneWay}"
-                               FontWeight="Bold"
-                               FontSize="37"
-                               VerticalAlignment="Center" HorizontalAlignment="Center"
-                               Grid.ColumnSpan="3"/>
-                </Grid>
-
-                <!--Surprise-->
-                <Image
-                    Grid.Column="3"
-                    Grid.Row="3"
-                    x:Name="UserSurpriseResultImage"
-                    Style="{StaticResource UserCapturedImageStyle}"
-                    Source="{x:Bind GameStateMachineVM.UserSurpriseImage, Mode=OneWay}"
-                    />
-                <Grid 
-                    Grid.Column="3"
-                    Grid.Row="3"
-                    VerticalAlignment="Bottom"
-                    HorizontalAlignment="Right">
-                    <Ellipse Width="94" Height="94" Fill="Yellow"
-                             Stroke="Black"
-                             StrokeThickness="2"/>
-                    <Image Width="107" Height="107"
-                           Source="ms-appx:///Assets/round.svg"
-                           Grid.ColumnSpan="3"/>
-                    <TextBlock Text="{x:Bind GameStateMachineVM.SupriseScore, Mode=OneWay}"
-                               FontWeight="Bold"
-                               FontSize="37"
-                               VerticalAlignment="Center" HorizontalAlignment="Center"
-                               Grid.ColumnSpan="3"/>
-                </Grid>
-
-                <Image 
-                    Grid.Row="5"
-                    Grid.ColumnSpan="5"
-                    Source="ms-appx:///Assets/logo-SOAT-300dpi.png"/>
             </Grid>
-        </Grid >
+        </Viewbox >
 
         <!--Flash-->
         <Grid Grid.Row="0">

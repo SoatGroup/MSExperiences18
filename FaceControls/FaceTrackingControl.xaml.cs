@@ -1,5 +1,6 @@
 ﻿using Microsoft.ProjectOxford.Face;
 using Microsoft.ProjectOxford.Face.Contract;
+using Microsoft.Toolkit.Uwp.Connectivity;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -27,7 +28,7 @@ namespace FaceControls
 {
     public sealed partial class FaceTrackingControl : UserControl
     {
-        private const double _screenRatio = 1.78;
+        private const double _screenRatio = 1.5;
 
         private readonly DisplayInformation _displayInformation = DisplayInformation.GetForCurrentView();
         private DisplayOrientations _displayOrientation = DisplayOrientations.Portrait;
@@ -301,13 +302,17 @@ namespace FaceControls
                             encoder.SetSoftwareBitmap(bitmap);
 
                             await encoder.FlushAsync();
-                            var detect = await FaceClient.DetectAsync(stream.AsStream(), false, false, requiedFaceAttributes);
-                            if (detect.Any())
+
+                            if (NetworkHelper.Instance.ConnectionInformation.IsInternetAvailable)
                             {
-                                var biggestFace = detect.OrderByDescending(f => f.FaceRectangle.Height * f.FaceRectangle.Width).First();
-                                if (biggestFace.FaceAttributes.Smile > 0.5)
+                                var detect = await FaceClient.DetectAsync(stream.AsStream(), false, false, requiedFaceAttributes);
+                                if (detect.Any())
                                 {
-                                    SmileDetected?.Invoke(this, biggestFace);
+                                    var biggestFace = detect.OrderByDescending(f => f.FaceRectangle.Height * f.FaceRectangle.Width).First();
+                                    if (biggestFace.FaceAttributes.Smile > 0.5)//TODO add || no internet
+                                    {
+                                        SmileDetected?.Invoke(this, biggestFace);
+                                    }
                                 }
                             }
                         }
@@ -429,7 +434,7 @@ namespace FaceControls
             await MediaCapture.CapturePhotoToStorageFileAsync(imageProperties, photoFile);
         }
 
-        public async Task CaptureFaceToFileAsync(StorageFile photoFile, FaceRectangle faceRectangle)
+        public async Task CaptureFaceToFileAsync(StorageFile photoFile, BitmapBounds faceBounds)
         {
             // Get video frame
             int height = 480;
@@ -438,14 +443,6 @@ namespace FaceControls
             //using (VideoFrame videoFrame = new VideoFrame(BitmapPixelFormat.Bgra8, (int)previewProperties.Width, (int)previewProperties.Height))
             {
                 await this.MediaCapture.GetPreviewFrameAsync(videoFrame);
-
-                BitmapBounds faceBounds = new BitmapBounds
-                {
-                    Width = (uint)faceRectangle.Width,
-                    Height = (uint)faceRectangle.Height,
-                    X = (uint)faceRectangle.Left,
-                    Y = (uint)faceRectangle.Top
-                };
 
                 faceBounds = GetFaceBoundsFromFrame(videoFrame, faceBounds, 1);
                 TryExtendFaceBounds(
