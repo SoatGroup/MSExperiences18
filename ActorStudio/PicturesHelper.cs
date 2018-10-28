@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Windows.Graphics.Imaging;
 using Windows.Storage;
 using Windows.Storage.Search;
 using Windows.Storage.Streams;
@@ -40,6 +42,26 @@ namespace ActorStudio
             {
                 await facePicture.DeleteAsync();
             }
+        }
+
+        internal static async Task<StorageFile> SaveResultBufferAsync(IBuffer pixelBuffer, int pixelWidth, int pixelHeight, float rawDpiX, float rawDpiY)
+        {
+            var pixels = pixelBuffer.ToArray();
+            var file = await ApplicationData.Current.LocalFolder.CreateFileAsync("score" + ".png", CreationCollisionOption.ReplaceExisting);
+            using (var stream = await file.OpenAsync(FileAccessMode.ReadWrite))
+            {
+                var encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.PngEncoderId, stream);
+                encoder.SetPixelData(BitmapPixelFormat.Bgra8,
+                                     BitmapAlphaMode.Premultiplied,
+                                     (uint)pixelWidth,
+                                     (uint)pixelHeight,
+                                     rawDpiX,
+                                     rawDpiY,
+                                     pixels);
+                await encoder.FlushAsync();
+            }
+
+            return file;
         }
     }
 }
