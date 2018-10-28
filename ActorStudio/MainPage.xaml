@@ -3,6 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:ActorStudio"
+    xmlns:toolkitControls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
@@ -42,12 +43,28 @@
                 </Grid>
             </SplitView.Content>
         </SplitView>
-       
-        <Image HorizontalAlignment="Left" VerticalAlignment="Bottom"
-               Source="ms-appx:///Assets/feuille-gauche.png"
-               Height="600"/>
-        <Image HorizontalAlignment="Right" VerticalAlignment="Bottom"
-               Source="ms-appx:///Assets/feuille-droite.png"
-               Height="600"/>
+
+        <toolkitControls:DropShadowPanel
+                BlurRadius="{StaticResource InstructionsShadowBlurRadius}" 
+                ShadowOpacity="{StaticResource InstructionsShadowOpacity}"
+                OffsetX="{StaticResource InstructionsShadowOffsetX}" 
+                OffsetY="{StaticResource InstructionsShadowOffsetY}"
+                Color="{StaticResource InstructionsShadowColor}"
+                HorizontalAlignment="Left" VerticalAlignment="Bottom">
+            <Image Source="ms-appx:///Assets/feuille-gauche.png"
+                   Height="600"/>
+        </toolkitControls:DropShadowPanel>
+
+        <toolkitControls:DropShadowPanel
+                BlurRadius="{StaticResource InstructionsShadowBlurRadius}" 
+                ShadowOpacity="{StaticResource InstructionsShadowOpacity}"
+                OffsetX="{StaticResource InstructionsShadowOffsetX}" 
+                OffsetY="{StaticResource InstructionsShadowOffsetY}"
+                Color="{StaticResource InstructionsShadowColor}"
+                HorizontalAlignment="Right" VerticalAlignment="Bottom">
+            <Image HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                   Source="ms-appx:///Assets/feuille-droite.png"
+                   Height="600"/>
+        </toolkitControls:DropShadowPanel>
     </Grid>
 </Page>
