@@ -10,6 +10,11 @@
         <SolidColorBrush x:Name="HamburgerButtonColor" Color="{StaticResource PrimaryColor}"/>
         
         <SolidColorBrush x:Name="InstructionsTextColor" Color="{StaticResource PrimaryColor}"/>
+        <x:Double x:Key="InstructionsShadowBlurRadius">4.0</x:Double>
+        <x:Double x:Key="InstructionsShadowOpacity">0.70</x:Double>
+        <x:Double x:Key="InstructionsShadowOffsetX">4.0</x:Double>
+        <x:Double x:Key="InstructionsShadowOffsetY">4.0</x:Double>
+        <Color x:Key="InstructionsShadowColor">Black</Color>
 
         <SolidColorBrush x:Name="FaceSmileyColor" Color="{StaticResource PrimaryColor}"/>
         <SolidColorBrush x:Name="FaceBoudingBoxColor" Color="{StaticResource PrimaryColor}"/>        

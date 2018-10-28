@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:ActorStudio"
     xmlns:controls="using:ActorStudio.Controls"
+    xmlns:toolkitControls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:faceControls="using:FaceControls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -59,13 +60,20 @@
         <StackPanel
             VerticalAlignment="Stretch"
             HorizontalAlignment="Center">
-            <TextBlock Name="tbInstructions"
+            <toolkitControls:DropShadowPanel
+                BlurRadius="{StaticResource InstructionsShadowBlurRadius}" 
+                ShadowOpacity="{StaticResource InstructionsShadowOpacity}"
+                OffsetX="{StaticResource InstructionsShadowOffsetX}" 
+                OffsetY="{StaticResource InstructionsShadowOffsetY}"
+                Color="{StaticResource InstructionsShadowColor}">
+                <TextBlock Name="tbInstructions"
                         FontSize="100"
                         TextAlignment="Center"
                         Text="{x:Bind GameStateMachineVM.Instructions, Mode=OneWay}"
                         VerticalAlignment="Top"
                         HorizontalAlignment="Center"
                         Foreground="{StaticResource InstructionsTextColor}"/>
+            </toolkitControls:DropShadowPanel>
             <Grid HorizontalAlignment="Center"
                   Visibility="{x:Bind GameStateMachineVM.IsFaceMatchVisible, Mode=OneWay}"
                   Width="830"
@@ -116,7 +124,7 @@
         <Grid Background="{StaticResource AcryclicTransparentBrush}"
               Visibility="{x:Bind GameStateMachineVM.IsEmotionsResultsVisible, Mode=OneWay}">
         </Grid>
-        
+
         <!--Emotions side-panel-->
         <Grid 
             Visibility="{x:Bind GameStateMachineVM.IsEmotionsCaptureVisible, Mode=OneWay}" >
