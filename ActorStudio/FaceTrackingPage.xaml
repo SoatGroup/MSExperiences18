@@ -45,7 +45,7 @@
             <Style.Setters>
                 <Setter Property="BorderThickness" Value="2"/>
                 <Setter Property="Margin" Value="15"/>
-                <Setter Property="BorderBrush" Value="Yellow"/>
+                <Setter Property="BorderBrush" Value="{StaticResource UserCaptureBorderColor}"/>
             </Style.Setters>
         </Style>
     </Page.Resources>
@@ -65,7 +65,7 @@
                         Text="{x:Bind GameStateMachineVM.Instructions, Mode=OneWay}"
                         VerticalAlignment="Top"
                         HorizontalAlignment="Center"
-                        Foreground="Yellow"/>
+                        Foreground="{StaticResource InstructionsTextColor}"/>
             <Grid HorizontalAlignment="Center"
                   Visibility="{x:Bind GameStateMachineVM.IsFaceMatchVisible, Mode=OneWay}"
                   Width="830"
@@ -97,7 +97,7 @@
                                 IsActive="True"/>
                 <Grid Grid.ColumnSpan="3"
                       Visibility="{x:Bind GameStateMachineVM.IsFaceMatchingRunning, Mode=OneWay}">
-                    <Ellipse Width="140" Height="140" Fill="Yellow"
+                    <Ellipse Width="140" Height="140" Fill="{StaticResource ScoreBackgroundColor}"
                              Stroke="Black"
                              StrokeThickness="2"/>
                     <Image Width="160" Height="160"

@@ -36,7 +36,7 @@
                     </Frame>
                     <Grid Padding="8,12,0,12" Tag="0">
                         <TextBlock Margin="10,0,20,0" Text="" FontFamily="Segoe MDL2 Assets" FontSize="25"
-                           Foreground="#ffdb29"
+                           Foreground="{StaticResource HamburgerButtonColor}"
                            Tapped="TextBlock_Tapped"/>
                     </Grid>
                 </Grid>

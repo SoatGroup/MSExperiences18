@@ -7,8 +7,8 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    d:DesignHeight="400"
-    d:DesignWidth="300">
+    d:DesignHeight="200"
+    d:DesignWidth="150">
     
     <StackPanel
         Orientation="Horizontal"
@@ -20,9 +20,9 @@
                  FontSize="13"
                  VerticalAlignment="Center"
                  FontWeight="ExtraBold"
-                 Foreground="Yellow"/>
+                 Foreground="{StaticResource ScoreEmotionTextColor}"/>
         <Grid Width="53" Height="53">
-            <Ellipse Width="47" Height="47" Fill="Yellow"
+            <Ellipse Width="47" Height="47" Fill="{StaticResource ScoreBackgroundColor}"
                      Stroke="Black"
                      StrokeThickness="2"/>
             <Image Width="53" Height="53"

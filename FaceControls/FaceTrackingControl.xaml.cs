@@ -30,6 +30,10 @@ namespace FaceControls
     {
         private const double _screenRatio = 1.5;
 
+        private string _smileyAssetPath = "ms-appx:///Assets/smiley.png";
+        private SolidColorBrush _smileyColor = Application.Current.Resources["FaceSmileyColor"] as SolidColorBrush;
+        private SolidColorBrush _faceBoundingBoxColor = Application.Current.Resources["FaceBoudingBoxColor"] as SolidColorBrush;
+
         private readonly DisplayInformation _displayInformation = DisplayInformation.GetForCurrentView();
         private DisplayOrientations _displayOrientation = DisplayOrientations.Portrait;
         private FaceDetectionEffect _faceDetectionEffect;
@@ -63,12 +67,11 @@ namespace FaceControls
             isPreviewing = false;
 
             smiley = new BitmapIcon();
-            smiley.UriSource = new Uri("ms-appx:///Assets/smiley.png");
-            smiley.Foreground = new SolidColorBrush(Colors.Yellow);
+            smiley.UriSource = new Uri(_smileyAssetPath);
+            smiley.Foreground = _smileyColor;
 
             smileyNeutral = new BitmapIcon();
-            smileyNeutral.UriSource = new Uri("ms-appx:///Assets/smiley_neutral.png");
-            smileyNeutral.Foreground = new SolidColorBrush(Colors.Yellow);
+            smileyNeutral.Foreground = _smileyColor;
         }
 
         public async Task InitCameraAsync()
@@ -260,7 +263,7 @@ namespace FaceControls
                     // Set bounding box stroke properties
                     faceBoundingBox.StrokeThickness = 2;
                     // Highlight the first face in the set
-                    faceBoundingBox.Stroke = new SolidColorBrush(Colors.Yellow);
+                    faceBoundingBox.Stroke = _faceBoundingBoxColor;
                     // Add grid to canvas containing all face UI objects
                     FacesCanvas.Children.Add(faceBoundingBox);
                 }

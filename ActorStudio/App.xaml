@@ -4,4 +4,20 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:ActorStudio">
 
+    <Application.Resources>
+        <Color x:Key="PrimaryColor">#ffdb29</Color>
+
+        <SolidColorBrush x:Name="HamburgerButtonColor" Color="{StaticResource PrimaryColor}"/>
+        
+        <SolidColorBrush x:Name="InstructionsTextColor" Color="{StaticResource PrimaryColor}"/>
+
+        <SolidColorBrush x:Name="FaceSmileyColor" Color="{StaticResource PrimaryColor}"/>
+        <SolidColorBrush x:Name="FaceBoudingBoxColor" Color="{StaticResource PrimaryColor}"/>        
+        
+        <SolidColorBrush x:Name="UserCaptureBorderColor" Color="{StaticResource PrimaryColor}"/>
+        
+        <SolidColorBrush x:Name="ScoreEmotionTextColor" Color="{StaticResource PrimaryColor}"/>
+        <SolidColorBrush x:Name="ScoreBackgroundColor" Color="{StaticResource PrimaryColor}"/>
+    </Application.Resources>
+
 </Application>
