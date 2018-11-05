@@ -76,8 +76,8 @@
             </toolkitControls:DropShadowPanel>
             <Grid HorizontalAlignment="Center"
                   Visibility="{x:Bind GameStateMachineVM.IsFaceMatchVisible, Mode=OneWay}"
-                  Width="830"
-                  Height="500">
+                  Width="930"
+                  Height="450">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="30"/>
@@ -191,10 +191,10 @@
         <Viewbox x:Name="EmotionsResultsViewBox"
                  Visibility="{x:Bind GameStateMachineVM.IsEmotionsResultsVisible, Mode=OneWay}"                 
                   Margin="20">
-            <Grid Height="560" Width="378">
+            <Grid Height="560" Width="378"
+                  x:Name="EmotionsResultsGrid">
 
-                <Grid Background="White" 
-                      x:Name="EmotionsResultsGrid">
+                <Grid Background="White" >
                     <!--Width="700"-->
                     <!--Height="1036"-->
                     <Grid.ColumnDefinitions>
@@ -223,13 +223,13 @@
                         Source="{x:Bind GameStateMachineVM.UserHappinessImage, Mode=OneWay}"
                         />
                     <controls:ScoreControl
-                        Margin="0 0 -12 -12"
                         Text="LA JOIE"
                         Score="{x:Bind GameStateMachineVM.HapinessScore, Mode=OneWay}"
                         Grid.Column="1"
                         Grid.Row="1"
-                        VerticalAlignment="Bottom"
-                        HorizontalAlignment="Right"/>
+                        Margin="0 0 -12 -12"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"/>
 
                     <!--Sadness-->
                     <Image
@@ -240,13 +240,13 @@
                         Source="{x:Bind GameStateMachineVM.UserSadnessImage, Mode=OneWay}"
                         />
                     <controls:ScoreControl
-                        Margin="0 0 -12 -12"
                         Text="LA TRISTESSE"
                         Score="{x:Bind GameStateMachineVM.SadnessScore, Mode=OneWay}"
                         Grid.Column="3"
                         Grid.Row="1"
-                        VerticalAlignment="Bottom"
-                        HorizontalAlignment="Right"/>
+                        Margin="0 0 -12 -12"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"/>
 
                     <!--Anger-->
                     <Image
@@ -257,13 +257,13 @@
                         Source="{x:Bind GameStateMachineVM.UserAngerImage, Mode=OneWay}"
                         />
                     <controls:ScoreControl
-                        Margin="0 0 -12 -12"
                         Text="LA COLÈRE"
                         Score="{x:Bind GameStateMachineVM.AngerScore, Mode=OneWay}"
                         Grid.Column="1"
                         Grid.Row="3"
-                        VerticalAlignment="Bottom"
-                        HorizontalAlignment="Right"/>
+                        Margin="0 0 -12 -12"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"/>
 
                     <!--Surprise-->
                     <Image
@@ -274,18 +274,72 @@
                         Source="{x:Bind GameStateMachineVM.UserSurpriseImage, Mode=OneWay}"
                         />
                     <controls:ScoreControl
-                        Margin="0 0 -12 -12"
                         Text="LA SUPRISE"
                         Score="{x:Bind GameStateMachineVM.SupriseScore, Mode=OneWay}"
                         Grid.Column="3"
                         Grid.Row="3"
-                        VerticalAlignment="Bottom"
-                        HorizontalAlignment="Right"/>
+                        Margin="0 0 -12 -12"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"/>
+                </Grid>
 
-                    <Image 
-                        Grid.Row="5"
-                        Grid.ColumnSpan="5"
-                        Source="ms-appx:///Assets/logo-SOAT-300dpi.png"/>
+                <Grid x:Name="accesoriesGrid">
+                    <toolkitControls:DropShadowPanel
+                        Margin="159 13 0 0"
+                        VerticalAlignment="Top" HorizontalAlignment="Left"
+                        BlurRadius="{StaticResource InstructionsShadowBlurRadius}" ShadowOpacity="{StaticResource InstructionsShadowOpacity}" OffsetX="{StaticResource InstructionsShadowOffsetX}"  OffsetY="{StaticResource InstructionsShadowOffsetY}" Color="{StaticResource InstructionsShadowColor}">
+                        <Image Source="ms-appx:///Assets/lunettes cinema.png" 
+                               Height="33" Width="77"/>
+                    </toolkitControls:DropShadowPanel>
+                    <toolkitControls:DropShadowPanel
+                        Margin="12 0 0 0"
+                        VerticalAlignment="Top" HorizontalAlignment="Left"
+                        BlurRadius="{StaticResource InstructionsShadowBlurRadius}" ShadowOpacity="{StaticResource InstructionsShadowOpacity}" 
+                        OffsetX="2"  OffsetY="2" 
+                        Color="{StaticResource InstructionsShadowColor}">
+                        <Image Source="ms-appx:///Assets/lampes.png" 
+                                VerticalAlignment="Top" HorizontalAlignment="Left"
+                                Height="136" Width="52"/>
+                    </toolkitControls:DropShadowPanel>
+                    <!--<Image Source="ms-appx:///Assets/lampes.png" 
+                           Margin="12 0 0 0"
+                           VerticalAlignment="Top" HorizontalAlignment="Left"
+                           Height="136"/>-->
+                    <toolkitControls:DropShadowPanel
+                        Margin="290 411 0 0"
+                        VerticalAlignment="Top" HorizontalAlignment="Left"
+                        BlurRadius="{StaticResource InstructionsShadowBlurRadius}" ShadowOpacity="{StaticResource InstructionsShadowOpacity}" OffsetX="{StaticResource InstructionsShadowOffsetX}"  OffsetY="{StaticResource InstructionsShadowOffsetY}" Color="{StaticResource InstructionsShadowColor}">
+                        <Image Source="ms-appx:///Assets/pop corn 2.png" 
+                               Height="60"/>
+                    </toolkitControls:DropShadowPanel>
+                    <!--<Image Source="ms-appx:///Assets/tel lunette.png" 
+                            Margin="3 403 0 0"
+                            VerticalAlignment="Top" HorizontalAlignment="Left"
+                            Height="103" Width="107"/>-->
+                    <Image Source="ms-appx:///Assets/becomesoat.svg" 
+                            Margin="0 455 0 0"
+                            VerticalAlignment="Top" HorizontalAlignment="Center"
+                            Height="60"/>
+                    <toolkitControls:DropShadowPanel
+                        VerticalAlignment="Top" HorizontalAlignment="Left"
+                        Margin="23 380 0 0"
+                        BlurRadius="{StaticResource InstructionsShadowBlurRadius}" ShadowOpacity="{StaticResource InstructionsShadowOpacity}" 
+                        OffsetX="2" OffsetY="2"
+                        Color="{StaticResource InstructionsShadowColor}">
+                        <Image Source="ms-appx:///Assets/reward2.png" 
+                               VerticalAlignment="Top" HorizontalAlignment="Left"
+                               Height="152" Width="79" >
+                        </Image>
+                    </toolkitControls:DropShadowPanel>
+                    <!--<BitmapIcon UriSource="ms-appx:///Assets/reward.png" 
+                                Margin="23 380 0 0"
+                                Foreground="{StaticResource AccesoryRewardColor}"
+                                VerticalAlignment="Top" HorizontalAlignment="Left"
+                                Height="152" Width="79" RenderTransformOrigin="0.5,0.5" >
+                        <BitmapIcon.RenderTransform>
+                            <RotateTransform Angle="-12"/>
+                        </BitmapIcon.RenderTransform>
+                    </BitmapIcon>-->
                 </Grid>
 
                 <Grid x:Name="PhotoboothImageGrid">

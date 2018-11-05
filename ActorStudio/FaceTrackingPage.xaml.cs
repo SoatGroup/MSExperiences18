@@ -80,6 +80,7 @@ namespace ActorStudio
             printHelper.OnPrintCanceled += PrintHelper_OnPrintTaskFinished;
             printHelper.OnPrintFailed += PrintHelper_OnPrintTaskFinished;
             printHelper.OnPrintSucceeded += PrintHelper_OnPrintTaskFinished;
+            //bool options = new ;
             await printHelper.ShowPrintUIAsync("Soat - ActorStudio", true);
         }
 

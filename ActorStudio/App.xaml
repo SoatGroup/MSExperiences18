@@ -6,6 +6,7 @@
 
     <Application.Resources>
         <Color x:Key="PrimaryColor">#ffdb29</Color>
+        <Color x:Key="SecondaryColor">#4C83A1</Color>
 
         <SolidColorBrush x:Name="HamburgerButtonColor" Color="{StaticResource PrimaryColor}"/>
         
@@ -23,6 +24,11 @@
         
         <SolidColorBrush x:Name="ScoreEmotionTextColor" Color="{StaticResource PrimaryColor}"/>
         <SolidColorBrush x:Name="ScoreBackgroundColor" Color="{StaticResource PrimaryColor}"/>
+
+        <SolidColorBrush x:Name="EmotionTextColor" Color="{StaticResource PrimaryColor}"/>
+        
+        <SolidColorBrush x:Name="AccesoryRewardColor" Color="{StaticResource PrimaryColor}"/>
+        
     </Application.Resources>
 
 </Application>

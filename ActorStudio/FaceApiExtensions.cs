@@ -211,21 +211,26 @@ namespace ActorStudio
                         };
 
                     var match = matches.OrderByDescending(m => m.Confidence).FirstOrDefault();
+
+
                     if (match == null)
                     {
                         return null;
                     }
                     else
                     {
-                        var personFolder = await personsFolder.GetFolderAsync(match.PersonName);
+                        var matchFile = await personsFolder.GetFileAsync($"{match.PersonName}.jpg");
 
-                        // Take first image in folder
-                        var queryOptions = new QueryOptions(CommonFileQuery.OrderByName, DefaultMediaFileExtensions);
-                        queryOptions.FolderDepth = FolderDepth.Shallow;
+                        //var personFolder = await personsFolder.GetFolderAsync(match.PersonName);
 
-                        var query = personFolder.CreateFileQueryWithOptions(queryOptions);
-                        var imgFiles = await query.GetFilesAsync();
-                        var matchFile = imgFiles.First();
+                        //// Take first image in folder
+                        //var queryOptions = new QueryOptions(CommonFileQuery.OrderByName, DefaultMediaFileExtensions);
+                        //queryOptions.FolderDepth = FolderDepth.Shallow;
+
+                        //var query = personFolder.CreateFileQueryWithOptions(queryOptions);
+                        //var imgFiles = await query.GetFilesAsync();
+                        //var matchFile = imgFiles.First();
+
                         IRandomAccessStream photoStream = await matchFile.OpenReadAsync();
                         match.FaceStream = photoStream.CloneStream().AsStream();
                         return match;

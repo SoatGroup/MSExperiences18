@@ -124,12 +124,22 @@
     <None Include="ActorStudio_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Assets\becomesoat.svg" />
+    <Content Include="Assets\confettis.png" />
     <Content Include="Assets\feuille-droite.png" />
     <Content Include="Assets\feuille-gauche.png" />
+    <Content Include="Assets\lampes.png" />
     <Content Include="Assets\logo-SOAT-300dpi.png" />
+    <Content Include="Assets\logo_becomesoat.png" />
+    <Content Include="Assets\lunettes cinema.png" />
+    <Content Include="Assets\pop corn 2.png" />
+    <Content Include="Assets\accessories.png" />
+    <Content Include="Assets\reward.png" />
+    <Content Include="Assets\reward2.png" />
     <Content Include="Assets\round.svg" />
     <Content Include="Assets\smiley_neutral.png" />
     <Content Include="Assets\smiley.png" />
+    <Content Include="Assets\tel lunette.png" />
     <Content Include="Properties\Default.rd.xml" />
     <Content Include="Assets\LockScreenLogo.scale-200.png" />
     <Content Include="Assets\SplashScreen.scale-200.png" />

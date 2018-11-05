@@ -22,13 +22,14 @@ namespace ActorStudio
         public static async Task<IRandomAccessStream> GetPersonPictureAsync(string groupFolderName, string personName)
         {
             var personsFolder = await KnownFolders.PicturesLibrary.GetFolderAsync(groupFolderName);
-            var personFolder = await personsFolder.GetFolderAsync(personName);
-            // Take first image in folder
-            var queryOptions = new QueryOptions(CommonFileQuery.OrderByName, DefaultMediaFileExtensions);
-            queryOptions.FolderDepth = FolderDepth.Shallow;
-            var query = personFolder.CreateFileQueryWithOptions(queryOptions);
-            var imgFiles = await query.GetFilesAsync();
-            var matchFile = imgFiles.First();
+            var matchFile = await personsFolder.GetFileAsync($"{personName}.jpg");
+            //var personFolder = await personsFolder.GetFolderAsync(personName);
+            //// Take first image in folder
+            //var queryOptions = new QueryOptions(CommonFileQuery.OrderByName, DefaultMediaFileExtensions);
+            //queryOptions.FolderDepth = FolderDepth.Shallow;
+            //var query = personFolder.CreateFileQueryWithOptions(queryOptions);
+            //var imgFiles = await query.GetFilesAsync();
+            //var matchFile = imgFiles.First();
             IRandomAccessStream photoStream = await matchFile.OpenReadAsync();
             return photoStream;
         }

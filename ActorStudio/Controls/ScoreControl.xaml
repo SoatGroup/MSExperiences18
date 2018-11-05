@@ -6,33 +6,63 @@
     xmlns:local="using:ActorStudio.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:toolkitControls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     mc:Ignorable="d"
     d:DesignHeight="200"
     d:DesignWidth="150">
     
-    <StackPanel
-        Orientation="Horizontal"
-        VerticalAlignment="Bottom"
-        HorizontalAlignment="Right">
-        <TextBox Text="{Binding Text, ElementName=root, Mode=OneTime}"
+    <Grid>
+        <toolkitControls:DropShadowPanel
+                BlurRadius="{StaticResource InstructionsShadowBlurRadius}" 
+                ShadowOpacity="{StaticResource InstructionsShadowOpacity}"
+                OffsetX="{StaticResource InstructionsShadowOffsetX}" 
+                OffsetY="{StaticResource InstructionsShadowOffsetY}"
+                 VerticalAlignment="Top"
+                 HorizontalAlignment="Center"
+                Color="{StaticResource InstructionsShadowColor}">
+            <TextBlock Text="{Binding Text, ElementName=root, Mode=OneTime}"
+                 FontSize="13"
+                 Margin="0 0 12 0"
+                 FontWeight="ExtraBold"
+                 Foreground="{StaticResource EmotionTextColor}"/>
+        </toolkitControls:DropShadowPanel>
+        <!--<TextBox Text="{Binding Text, ElementName=root, Mode=OneTime}"
                  BorderThickness="0"
                  Background="Transparent"
                  FontSize="13"
-                 VerticalAlignment="Center"
+                 VerticalAlignment="Top"
+                 HorizontalAlignment="Center"
+                 Margin="0 0 12 0"
                  FontWeight="ExtraBold"
-                 Foreground="{StaticResource ScoreEmotionTextColor}"/>
-        <Grid Width="53" Height="53">
+                 Foreground="{StaticResource EmotionTextColor}"/>-->
+        <Grid Width="53" Height="53"
+              VerticalAlignment="Bottom"
+              HorizontalAlignment="Right">
             <Ellipse Width="47" Height="47" Fill="{StaticResource ScoreBackgroundColor}"
                      Stroke="Black"
                      StrokeThickness="2"/>
             <Image Width="53" Height="53"
-                               Source="ms-appx:///Assets/round.svg"
-                               Grid.ColumnSpan="3"/>
+                   Source="ms-appx:///Assets/round.svg"/>
             <TextBlock Text="{Binding Score, ElementName=root, Mode=OneWay}"
                        FontWeight="Bold"
                        FontSize="15"
                        VerticalAlignment="Center" HorizontalAlignment="Center"/>
+            <!--<TextBlock Text="99"
+                       FontWeight="Bold"
+                       FontSize="18"
+                       Margin="0 0 0 5"
+                       VerticalAlignment="Center" HorizontalAlignment="Center"/>
+            <TextBlock Text="/"
+                       FontWeight="Bold"
+                       FontSize="7"
+                       Margin="7 18 0 0"
+                       VerticalAlignment="Center" HorizontalAlignment="Center"/>
+            <TextBlock Text="100"
+                       FontWeight="Bold"
+                       FontSize="6"
+                       Margin="20 22 0 0"
+                       VerticalAlignment="Center" HorizontalAlignment="Center"/>-->
         </Grid>
-    </StackPanel>
+    </Grid>
 </UserControl>
 
