@@ -28,8 +28,6 @@ namespace FaceControls
 {
     public sealed partial class FaceTrackingControl : UserControl
     {
-        private const double _screenRatio = 1.5;
-
         private string _smileyAssetPath = "ms-appx:///Assets/smiley.png";
         private SolidColorBrush _smileyColor = Application.Current.Resources["FaceSmileyColor"] as SolidColorBrush;
         private SolidColorBrush _faceBoundingBoxColor = Application.Current.Resources["FaceBoudingBoxColor"] as SolidColorBrush;
@@ -74,7 +72,7 @@ namespace FaceControls
             smileyNeutral.Foreground = _smileyColor;
         }
 
-        public async Task InitCameraAsync()
+        public async Task InitCameraAsync(double screenRatio)
         {
             try
             {
@@ -106,7 +104,7 @@ namespace FaceControls
                 var props = MediaCapture.VideoDeviceController.GetAvailableMediaStreamProperties(MediaStreamType.VideoPreview);
                 IEnumerable<StreamResolution> allStreamProperties = props.Select(x => new StreamResolution(x));
                 // Order them by resolution then frame rate
-                allStreamProperties = allStreamProperties.Where(p => p.AspectRatio == _screenRatio).OrderByDescending(x => x.FrameRate).ThenByDescending(x => x.Height * x.Width);
+                allStreamProperties = allStreamProperties.Where(p => p.AspectRatio == screenRatio).OrderByDescending(x => x.FrameRate).ThenByDescending(x => x.Height * x.Width);
                 await MediaCapture.VideoDeviceController.SetMediaStreamPropertiesAsync(MediaStreamType.VideoPreview, allStreamProperties.First().EncodingProperties);
 
 

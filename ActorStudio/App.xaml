@@ -28,7 +28,16 @@
         <SolidColorBrush x:Name="EmotionTextColor" Color="{StaticResource PrimaryColor}"/>
         
         <SolidColorBrush x:Name="AccesoryRewardColor" Color="{StaticResource PrimaryColor}"/>
-        
+
+        <x:String x:Key="HapinessUpper">LA JOIE</x:String>
+        <x:String x:Key="Hapiness">La Joie</x:String>
+        <x:String x:Key="SadnessUpper">LA TRISTESSE</x:String>
+        <x:String x:Key="Sadness">La Tristesse</x:String>
+        <x:String x:Key="SupriseUpper">LA SUPRISE</x:String>
+        <x:String x:Key="Suprise">La Suprise</x:String>
+        <x:String x:Key="AngerUpper">LA COLÈRE</x:String>
+        <x:String x:Key="Anger">La Colère</x:String>
+
     </Application.Resources>
 
 </Application>

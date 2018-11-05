@@ -223,7 +223,7 @@
                         Source="{x:Bind GameStateMachineVM.UserHappinessImage, Mode=OneWay}"
                         />
                     <controls:ScoreControl
-                        Text="LA JOIE"
+                        x:Uid="Score_Hapiness"
                         Score="{x:Bind GameStateMachineVM.HapinessScore, Mode=OneWay}"
                         Grid.Column="1"
                         Grid.Row="1"
@@ -240,7 +240,7 @@
                         Source="{x:Bind GameStateMachineVM.UserSadnessImage, Mode=OneWay}"
                         />
                     <controls:ScoreControl
-                        Text="LA TRISTESSE"
+                        x:Uid="Score_Sadness"
                         Score="{x:Bind GameStateMachineVM.SadnessScore, Mode=OneWay}"
                         Grid.Column="3"
                         Grid.Row="1"
@@ -257,7 +257,7 @@
                         Source="{x:Bind GameStateMachineVM.UserAngerImage, Mode=OneWay}"
                         />
                     <controls:ScoreControl
-                        Text="LA COLÈRE"
+                        x:Uid="Score_Anger"
                         Score="{x:Bind GameStateMachineVM.AngerScore, Mode=OneWay}"
                         Grid.Column="1"
                         Grid.Row="3"
@@ -274,7 +274,7 @@
                         Source="{x:Bind GameStateMachineVM.UserSurpriseImage, Mode=OneWay}"
                         />
                     <controls:ScoreControl
-                        Text="LA SUPRISE"
+                        x:Uid="Score_Surprise"
                         Score="{x:Bind GameStateMachineVM.SupriseScore, Mode=OneWay}"
                         Grid.Column="3"
                         Grid.Row="3"

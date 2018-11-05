@@ -17,6 +17,7 @@
                 ShadowOpacity="{StaticResource InstructionsShadowOpacity}"
                 OffsetX="{StaticResource InstructionsShadowOffsetX}" 
                 OffsetY="{StaticResource InstructionsShadowOffsetY}"
+            Margin="0 4 0 0"
                  VerticalAlignment="Top"
                  HorizontalAlignment="Center"
                 Color="{StaticResource InstructionsShadowColor}">

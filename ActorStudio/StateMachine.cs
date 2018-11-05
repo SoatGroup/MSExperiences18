@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Windows.ApplicationModel.Resources;
 using Windows.Graphics.Imaging;
 using Windows.Media.FaceAnalysis;
 using Windows.Storage;
@@ -28,6 +29,9 @@ namespace ActorStudio
         private bool _isEmotionsCaptureVisible;
         private bool _isEmotionsResultsVisible;
         private bool _isFaceMatchingRunning;
+
+        public ResourceLoader ResourceLoader { get; }
+
         private FaceServiceClient _faceClient;
         private CoreDispatcher _dispatcher;
         private FaceControls.FaceTrackingControl _faceTrackingControl;
@@ -118,7 +122,8 @@ namespace ActorStudio
                             break;
                         case State.CheckingSmile:
                             _faceTrackingControl.IsCheckSmileEnabled = true;
-                            Instructions = $"Pour commencer à jouer{Environment.NewLine}fais moi un sourire";
+                            var test = ResourceLoader.GetString("Instructions_CheckingSmile");
+                            Instructions = test;
                             break;
                         case State.FaceRecognition:
                             _faceTrackingControl.StopFaceTracking();
@@ -311,6 +316,7 @@ namespace ActorStudio
 
         public StateMachine()
         {
+            ResourceLoader = new Windows.ApplicationModel.Resources.ResourceLoader();
             _faceClient = new FaceServiceClient("34f95dfe9ef7460e9bfbd19987a5b6c3", "https://westeurope.api.cognitive.microsoft.com/face/v1.0");
         }
 
@@ -326,7 +332,7 @@ namespace ActorStudio
             {
                 try
                 {
-                    await _faceTrackingControl.InitCameraAsync();
+                    await _faceTrackingControl.InitCameraAsync(Constants.ScreenRatio);
 
                     CurrentState = State.FacesDetection;
                 }
@@ -341,7 +347,7 @@ namespace ActorStudio
         {
             if (match == null)
             {
-                Instructions = $"On t'as déja dit que{Environment.NewLine}tu ressemblais à{Environment.NewLine}Alain... De Loin ?";
+                Instructions = ResourceLoader.GetString("Instructions_NoRecognizedFace");
                 await Task.Delay(3000);
             }
             else
@@ -353,7 +359,7 @@ namespace ActorStudio
                     RecognizedFaceImage = bitmap;
                 }
 
-                Instructions = $"On t'a déja dit que{Environment.NewLine}tu ressemblais à{Environment.NewLine}{match.PersonName} ?";
+                Instructions = $"{ResourceLoader.GetString("RecognizedFace_Part1")}{Environment.NewLine}{match.PersonName}{ResourceLoader.GetString("RecognizedFace_Part2")}";
                 Confidence = (match.Confidence * 100).ToString("N0") + "%";
                 IsFaceMatchVisible = true;
 
@@ -367,7 +373,7 @@ namespace ActorStudio
             Instructions = null;
             await Task.Delay(1000);
 
-            Instructions = $"Voyons si tu peux{Environment.NewLine}intégrer le casting de{Environment.NewLine}Game Of Thrones !";
+            Instructions = ResourceLoader.GetString("Instructions_StartGame");
             await Task.Delay(5000);
 
             CurrentState = State.EmotionsCaptures;
@@ -389,7 +395,7 @@ namespace ActorStudio
                         else if (args.ResultFrame.DetectedFaces.Any())
                         {
                             // at least one 'small' face is detected so we encourage the person to come closer
-                            Instructions = $"N'aie pas peur...{Environment.NewLine}Approche toi !";
+                            Instructions = ResourceLoader.GetString("Instructions_ComeCloser");
                         }
                         else
                         {
@@ -491,18 +497,18 @@ namespace ActorStudio
             AngerScore = null;
             IsEmotionsCaptureVisible = true;
 
-            Instructions = $"Tu vas devoir nous jouer {Environment.NewLine} plusieurs émotions {Environment.NewLine} Prêt ?";
+            Instructions = ResourceLoader.GetString("Instructions_StartEmotions");
             await Task.Delay(waitMillisecondsDelay);
 
             var captureTimerDelay = TimeSpan.FromSeconds(_emotionCaptureDelayInSeconds);
 
-            await WaitAndCaptureEmotionAsync("LA JOIE", captureTimerDelay, Emotion.Hapiness);
+            await WaitAndCaptureEmotionAsync(ResourceLoader.GetString("Emotion_Hapiness"), captureTimerDelay, Emotion.Hapiness);
 
-            await WaitAndCaptureEmotionAsync("LA TRISTESSE", captureTimerDelay, Emotion.Sadness);
+            await WaitAndCaptureEmotionAsync(ResourceLoader.GetString("Emotion_Sadness"), captureTimerDelay, Emotion.Sadness);
 
-            await WaitAndCaptureEmotionAsync("LA COLÈRE", captureTimerDelay, Emotion.Anger);
+            await WaitAndCaptureEmotionAsync(ResourceLoader.GetString("Emotion_Anger"), captureTimerDelay, Emotion.Anger);
 
-            await WaitAndCaptureEmotionAsync("LA SURPRISE", captureTimerDelay, Emotion.Surprise);
+            await WaitAndCaptureEmotionAsync(ResourceLoader.GetString("Emotion_Surprise"), captureTimerDelay, Emotion.Surprise);
 
             await Task.Delay(2000);
 

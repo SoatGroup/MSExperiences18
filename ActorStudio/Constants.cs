@@ -2,6 +2,8 @@
 {
     public static class Constants
     {
+        public const double ScreenRatio = 1.78;
+
         //Face API Client
         public const string key_face = "34f95dfe9ef7460e9bfbd19987a5b6c3";
         public const string face_apiroot = "https://westeurope.api.cognitive.microsoft.com/face/v1.0";
