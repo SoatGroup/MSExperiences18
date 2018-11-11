@@ -17,5 +17,10 @@
         public const int BigFaceSizeThreshold = 20000;
 
         public const string PHOTO_FILE_NAME = "photo.jpg";
+        
+        public const int WaitBeforeEmotionCaptureMsDelay = 3000;
+        public const int WaitBetweenEmotionCaptureMsDelay = 2000;
+
+        public const int CameraIndex = 0;
     }
 }

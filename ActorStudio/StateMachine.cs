@@ -121,9 +121,9 @@ namespace ActorStudio
                             Instructions = null;
                             break;
                         case State.CheckingSmile:
+                            Instructions = ResourceLoader.GetString("Instructions_CheckingSmile");
+                            Task.Delay(2000);
                             _faceTrackingControl.IsCheckSmileEnabled = true;
-                            var test = ResourceLoader.GetString("Instructions_CheckingSmile");
-                            Instructions = test;
                             break;
                         case State.FaceRecognition:
                             _faceTrackingControl.StopFaceTracking();
@@ -164,7 +164,7 @@ namespace ActorStudio
             // Clean all Files
             await PicturesHelper.CleanFaceCapturesAsync();
 
-            await Task.Delay(3000);
+            await Task.Delay(10000);
 
             this.CurrentState = State.Idle;
         }
@@ -489,8 +489,6 @@ namespace ActorStudio
 
         private async void StartCaptureEmotionsAsync()
         {
-            int waitMillisecondsDelay = 3000;
-
             HapinessScore = null;
             SadnessScore = null;
             SupriseScore = null;
@@ -498,7 +496,7 @@ namespace ActorStudio
             IsEmotionsCaptureVisible = true;
 
             Instructions = ResourceLoader.GetString("Instructions_StartEmotions");
-            await Task.Delay(waitMillisecondsDelay);
+            await Task.Delay(Constants.WaitBeforeEmotionCaptureMsDelay);
 
             var captureTimerDelay = TimeSpan.FromSeconds(_emotionCaptureDelayInSeconds);
 
@@ -509,8 +507,6 @@ namespace ActorStudio
             await WaitAndCaptureEmotionAsync(ResourceLoader.GetString("Emotion_Anger"), captureTimerDelay, Emotion.Anger);
 
             await WaitAndCaptureEmotionAsync(ResourceLoader.GetString("Emotion_Surprise"), captureTimerDelay, Emotion.Surprise);
-
-            await Task.Delay(2000);
 
             CurrentState = State.GameEnded;
         }
@@ -580,6 +576,9 @@ namespace ActorStudio
                     }
                 }
             });
+
+            await Task.Delay(Constants.WaitBetweenEmotionCaptureMsDelay);
+
             Instructions = null;
         }
 
@@ -605,6 +604,7 @@ namespace ActorStudio
                 IsEmotionsResultsVisible = true;
                 AllEmotionsCaptured?.Invoke(this, null);
                 IsEmotionsCaptureVisible = false;
+                await Task.Delay(3000);
                 this.CurrentState = State.WaitForPrint;
             });
         }

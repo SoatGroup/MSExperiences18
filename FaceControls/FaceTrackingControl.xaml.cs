@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Windows.Devices.Enumeration;
 using Windows.Foundation;
 using Windows.Graphics.Display;
 using Windows.Graphics.Imaging;
@@ -80,11 +81,14 @@ namespace FaceControls
 
                 Status = "Initializing camera to capture audio and video...";
 
+                DeviceInformationCollection devices = await DeviceInformation.FindAllAsync(DeviceClass.VideoCapture);
+
                 // Use default initialization
                 MediaCapture = new MediaCapture();
                 MediaCaptureInitializationSettings settings = new MediaCaptureInitializationSettings()
                 {
                     StreamingCaptureMode = StreamingCaptureMode.Video,
+                    VideoDeviceId = devices[Constants.CameraIndex].Id
 
                 };
                 await MediaCapture.InitializeAsync(settings);
