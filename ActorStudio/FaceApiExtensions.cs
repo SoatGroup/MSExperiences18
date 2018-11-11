@@ -239,7 +239,7 @@ namespace ActorStudio
             }
             catch (Exception e)
             {
-                throw;
+                return null;
             }
         }
     }

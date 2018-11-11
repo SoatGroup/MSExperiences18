@@ -332,7 +332,7 @@ namespace ActorStudio
             {
                 try
                 {
-                    await _faceTrackingControl.InitCameraAsync(Constants.ScreenRatio);
+                    await _faceTrackingControl.InitCameraAsync(Constants.CameraIndex, Constants.ScreenRatio);
 
                     CurrentState = State.FacesDetection;
                 }

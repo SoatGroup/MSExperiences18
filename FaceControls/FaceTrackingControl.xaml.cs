@@ -73,7 +73,7 @@ namespace FaceControls
             smileyNeutral.Foreground = _smileyColor;
         }
 
-        public async Task InitCameraAsync(double screenRatio)
+        public async Task InitCameraAsync(int cameraIndex, double screenRatio)
         {
             try
             {
@@ -88,7 +88,7 @@ namespace FaceControls
                 MediaCaptureInitializationSettings settings = new MediaCaptureInitializationSettings()
                 {
                     StreamingCaptureMode = StreamingCaptureMode.Video,
-                    VideoDeviceId = devices[Constants.CameraIndex].Id
+                    VideoDeviceId = devices[cameraIndex].Id
 
                 };
                 await MediaCapture.InitializeAsync(settings);
