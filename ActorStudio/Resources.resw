@@ -131,11 +131,11 @@
   </data>
   <data name="Instructions_CheckingSmile" xml:space="preserve">
     <value>Pour commencer à jouer
-fais moi un sourire</value>
+fais-moi un sourire</value>
   </data>
   <data name="Instructions_ComeCloser" xml:space="preserve">
     <value>N'aie pas peur...
-Approche toi !</value>
+Approche-toi !</value>
   </data>
   <data name="Instructions_NoRecognizedFace" xml:space="preserve">
     <value>On t'as déja dit que

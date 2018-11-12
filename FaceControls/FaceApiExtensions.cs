@@ -174,10 +174,6 @@ namespace FaceControls
                         return false;
                     }
                 }
-                catch (Exception e)
-                {
-                    throw;
-                }
             } while (rateLimitExceeded == true);
 
             return true;

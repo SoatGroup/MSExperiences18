@@ -551,7 +551,7 @@ namespace FaceControls
                     encoder.BitmapTransform.Bounds = bounds;
                     await encoder.FlushAsync();
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     //TODO handle error
                 }
