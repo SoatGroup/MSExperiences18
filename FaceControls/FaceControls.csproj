@@ -131,12 +131,6 @@
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\FaceApiProxy\FaceApiProxy.csproj">
-      <Project>{be08e299-35cf-4f66-ab36-f973336d6d1d}</Project>
-      <Name>FaceApiProxy</Name>
-    </ProjectReference>
-  </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
   </PropertyGroup>
