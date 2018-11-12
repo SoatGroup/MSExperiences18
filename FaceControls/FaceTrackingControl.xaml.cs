@@ -30,9 +30,9 @@ namespace FaceControls
 {
     public sealed partial class FaceTrackingControl : UserControl
     {
-        private string _smileyAssetPath = "ms-appx:///Assets/smiley.png";
-        private SolidColorBrush _smileyColor = Application.Current.Resources["FaceSmileyColor"] as SolidColorBrush;
-        private SolidColorBrush _faceBoundingBoxColor = Application.Current.Resources["FaceBoudingBoxColor"] as SolidColorBrush;
+        private readonly string _smileyAssetPath = "ms-appx:///Assets/smiley.png";
+        private readonly SolidColorBrush _smileyColor = Application.Current.Resources["FaceSmileyColor"] as SolidColorBrush;
+        private readonly SolidColorBrush _faceBoundingBoxColor = Application.Current.Resources["FaceBoudingBoxColor"] as SolidColorBrush;
 
         private readonly DisplayInformation _displayInformation = DisplayInformation.GetForCurrentView();
         private DisplayOrientations _displayOrientation = DisplayOrientations.Portrait;
@@ -40,15 +40,14 @@ namespace FaceControls
         private VideoEncodingProperties _previewProperties;
         private FaceTracker _faceTracker;
         private bool _isPreviewing;
-        private bool _mirroringPreview = true;
-        private BitmapIcon _smiley;
-        private BitmapIcon _smileyNeutral;
+        private readonly bool _mirroringPreview = true;
+        private readonly BitmapIcon _smiley;
+        private readonly BitmapIcon _smileyNeutral;
 
         public FaceServiceClient FaceClient;
 
         //0 for false, 1 for true.
         private static int _isCheckingSmile;
-        private object _isSmilingLock = new object();
         private DateTime? _lastSmileCheck;
 
         public string Status { get; set; }
@@ -66,12 +65,13 @@ namespace FaceControls
 
             _isPreviewing = false;
 
-            _smiley = new BitmapIcon();
-            _smiley.UriSource = new Uri(_smileyAssetPath);
-            _smiley.Foreground = _smileyColor;
+            _smiley = new BitmapIcon
+            {
+                UriSource = new Uri(_smileyAssetPath),
+                Foreground = _smileyColor
+            };
 
-            _smileyNeutral = new BitmapIcon();
-            _smileyNeutral.Foreground = _smileyColor;
+            _smileyNeutral = new BitmapIcon {Foreground = _smileyColor};
         }
 
         public async Task InitCameraAsync(int cameraIndex, double screenRatio)
@@ -180,19 +180,22 @@ namespace FaceControls
             if (args.ResultFrame.DetectedFaces.Any())
             {
                 var biggestFace = args.ResultFrame.DetectedFaces.OrderByDescending(f => f.FaceBox.Height * f.FaceBox.Width).FirstOrDefault();
-                var faceBounds = new BitmapBounds
+                if (biggestFace != null)
                 {
-                    X = biggestFace.FaceBox.X,
-                    Y = biggestFace.FaceBox.Y,
-                    Height = biggestFace.FaceBox.Height,
-                    Width = biggestFace.FaceBox.Width
-                };
-                // Check if face is not too big
-                if (false == TryExtendFaceBounds(
-                    (int)_previewProperties.Width, (int)_previewProperties.Height,
-                    Constants.FaceBoxRatio, ref faceBounds))
-                {
-                    return;
+                    var faceBounds = new BitmapBounds
+                    {
+                        X = biggestFace.FaceBox.X,
+                        Y = biggestFace.FaceBox.Y,
+                        Height = biggestFace.FaceBox.Height,
+                        Width = biggestFace.FaceBox.Width
+                    };
+                    // Check if face is not too big
+                    if (false == TryExtendFaceBounds(
+                            (int)_previewProperties.Width, (int)_previewProperties.Height,
+                            Constants.FaceBoxRatio, ref faceBounds))
+                    {
+                        return;
+                    }
                 }
 
                 // Ask the UI thread to render the face bounding boxes
@@ -216,6 +219,7 @@ namespace FaceControls
                 }
                 catch (Exception)
                 {
+                    // ignored
                 }
                 finally
                 {
@@ -294,35 +298,38 @@ namespace FaceControls
                     _lastSmileCheck = DateTime.Now;
 
                     var requiedFaceAttributes = new[] { FaceAttributeType.Smile };
-                    var previewProperties = MediaCapture.VideoDeviceController.GetMediaStreamProperties(MediaStreamType.VideoPreview) as VideoEncodingProperties;
-                    double scale = 480d / previewProperties.Height;
-                    VideoFrame videoFrame = new VideoFrame(BitmapPixelFormat.Bgra8, (int)(previewProperties.Width * scale), 480);
-                    using (var frame = await MediaCapture.GetPreviewFrameAsync(videoFrame))
+                    if (MediaCapture.VideoDeviceController.GetMediaStreamProperties(MediaStreamType.VideoPreview) is VideoEncodingProperties previewProperties)
                     {
-                        if (frame.SoftwareBitmap != null)
+                        double scale = 480d / previewProperties.Height;
+                        VideoFrame videoFrame = new VideoFrame(BitmapPixelFormat.Bgra8, (int)(previewProperties.Width * scale), 480);
+                        using (var frame = await MediaCapture.GetPreviewFrameAsync(videoFrame))
                         {
-                            var bitmap = frame.SoftwareBitmap;
-
-                            InMemoryRandomAccessStream stream = new InMemoryRandomAccessStream();
-                            BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, stream);
-                            encoder.SetSoftwareBitmap(bitmap);
-
-                            await encoder.FlushAsync();
-
-                            if (NetworkHelper.Instance.ConnectionInformation.IsInternetAvailable)
+                            if (frame.SoftwareBitmap != null)
                             {
-                                var detect = await FaceClient.DetectAsync(stream.AsStream(), false, false, requiedFaceAttributes);
-                                if (detect.Any())
+                                var bitmap = frame.SoftwareBitmap;
+
+                                InMemoryRandomAccessStream stream = new InMemoryRandomAccessStream();
+                                BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, stream);
+                                encoder.SetSoftwareBitmap(bitmap);
+
+                                await encoder.FlushAsync();
+
+                                if (NetworkHelper.Instance.ConnectionInformation.IsInternetAvailable)
                                 {
-                                    var biggestFace = detect.OrderByDescending(f => f.FaceRectangle.Height * f.FaceRectangle.Width).First();
-                                    if (biggestFace.FaceAttributes.Smile > 0.5)//TODO add || no internet
+                                    var detect = await FaceClient.DetectAsync(stream.AsStream(), false, false, requiedFaceAttributes);
+                                    if (detect.Any())
                                     {
-                                        SmileDetected?.Invoke(this, biggestFace);
+                                        var biggestFace = detect.OrderByDescending(f => f.FaceRectangle.Height * f.FaceRectangle.Width).First();
+                                        if (biggestFace.FaceAttributes.Smile > 0.5)//TODO add || no internet
+                                        {
+                                            SmileDetected?.Invoke(this, biggestFace);
+                                        }
                                     }
                                 }
                             }
                         }
                     }
+
                     Interlocked.Exchange(ref _isCheckingSmile, 0);
                 }
             }
@@ -425,21 +432,6 @@ namespace FaceControls
 
         #endregion
 
-        public async Task<Stream> GetCaptureStreamAsync()
-        {
-            InMemoryRandomAccessStream stream = new InMemoryRandomAccessStream();
-            ImageEncodingProperties imageProperties = ImageEncodingProperties.CreateJpeg();
-            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () => await MediaCapture.CapturePhotoToStreamAsync(imageProperties, stream));
-            var streamSend = stream.CloneStream().AsStream();
-            return streamSend;
-        }
-
-        public async Task GetCaptureFileAsync(StorageFile photoFile)
-        {
-            ImageEncodingProperties imageProperties = ImageEncodingProperties.CreateJpeg();
-            await MediaCapture.CapturePhotoToStorageFileAsync(imageProperties, photoFile);
-        }
-
         public async Task CaptureFaceToFileAsync(StorageFile photoFile, BitmapBounds faceBounds)
         {
             // Get video frame
@@ -508,7 +500,7 @@ namespace FaceControls
                 faces = await _faceTracker.ProcessNextFrameAsync(grayVideoFrame);
             }
 
-            if (faces.Any())
+            if ((faces ?? throw new InvalidOperationException()).Any())
             {
                 var mainFace = faces.OrderByDescending(f => f.FaceBox.Height * f.FaceBox.Width).First();
                 var faceBounds = GetFaceBoundsFromFrame(videoFrame, mainFace.FaceBox, 1);

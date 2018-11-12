@@ -17,7 +17,7 @@ namespace ActorStudio
             {
                 var response = await FaceApiHelper.IdentifyPersonAsync(faceClient, stream, personGroupId);
 
-                if (response == null || response.Candidates == null || response.Candidates.Length == 0)
+                if (response?.Candidates == null || response.Candidates.Length == 0)
                 {
                     return null;
                 }
