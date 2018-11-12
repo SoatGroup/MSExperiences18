@@ -1,13 +1,13 @@
-﻿using Microsoft.Toolkit.Uwp.Helpers;
-using System;
+﻿using System;
 using System.Numerics;
 using System.Threading.Tasks;
+using Windows.ApplicationModel.Core;
 using Windows.Graphics.Display;
-using Windows.UI.Composition;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Hosting;
 using Windows.UI.Xaml.Media.Animation;
 using Windows.UI.Xaml.Media.Imaging;
+using Microsoft.Toolkit.Uwp.Helpers;
 
 namespace ActorStudio
 {
@@ -16,28 +16,27 @@ namespace ActorStudio
     /// </summary>
     public sealed partial class FaceTrackingPage : Page
     {
-        private Compositor _compositor;
-        PrintHelper printHelper;
+        PrintHelper _printHelper;
 
-        public GameViewModel GameStateMachineVM { get; set; }
+        public GameViewModel GameStateMachineVm { get; set; }
 
         public FaceTrackingPage()
         {
-            this.InitializeComponent();
-            this.DataContextChanged += (s, e) => Bindings.Update();
-            GameStateMachineVM = this.DataContext as GameViewModel;
+            InitializeComponent();
+            DataContextChanged += (s, e) => Bindings.Update();
+            GameStateMachineVm = DataContext as GameViewModel;
 
-            var dispatcher = Windows.ApplicationModel.Core.CoreApplication.GetCurrentView().CoreWindow.Dispatcher;
-            GameStateMachineVM.StartAsync(FaceTrackingControl, dispatcher);
+            var dispatcher = CoreApplication.GetCurrentView().CoreWindow.Dispatcher;
+            GameStateMachineVm.StartAsync(FaceTrackingControl, dispatcher);
 
-            GameStateMachineVM.ImageCaptured += GameStateMachineVM_ImageCaptured;
-            GameStateMachineVM.AllEmotionsCaptured += GameStateMachineVM_AllEmotionsCaptured;
+            GameStateMachineVm.ImageCaptured += GameStateMachineVM_ImageCaptured;
+            GameStateMachineVm.AllEmotionsCaptured += GameStateMachineVM_AllEmotionsCaptured;
             
             // Connect Animation custom settings, the default animation is 0.8s with no easig and may need to be customized
-            this._compositor = ElementCompositionPreview.GetElementVisual(this).Compositor;
+            var compositor = ElementCompositionPreview.GetElementVisual(this).Compositor;
             var connectedAnimationService = ConnectedAnimationService.GetForCurrentView();
             connectedAnimationService.DefaultDuration = TimeSpan.FromSeconds(1.0);
-            connectedAnimationService.DefaultEasingFunction = this._compositor.CreateCubicBezierEasingFunction(
+            connectedAnimationService.DefaultEasingFunction = compositor.CreateCubicBezierEasingFunction(
                 new Vector2(0.41f, 0.52f),
                 new Vector2(0.00f, 0.94f)
             );
@@ -73,12 +72,12 @@ namespace ActorStudio
 
         private async Task SendResultToPrinterAsync()
         {
-            printHelper = new PrintHelper(ResultControl.PhotoboothImageGrid);
-            printHelper.OnPrintCanceled += PrintHelper_OnPrintTaskFinished;
-            printHelper.OnPrintFailed += PrintHelper_OnPrintTaskFinished;
-            printHelper.OnPrintSucceeded += PrintHelper_OnPrintTaskFinished;
+            _printHelper = new PrintHelper(ResultControl.PhotoboothImageGrid);
+            _printHelper.OnPrintCanceled += PrintHelper_OnPrintTaskFinished;
+            _printHelper.OnPrintFailed += PrintHelper_OnPrintTaskFinished;
+            _printHelper.OnPrintSucceeded += PrintHelper_OnPrintTaskFinished;
             //bool options = new ;
-            await printHelper.ShowPrintUIAsync("Soat - ActorStudio", true);
+            await _printHelper.ShowPrintUIAsync("Soat - ActorStudio", true);
         }
 
         public async Task SaveResultImageAsync()
@@ -91,12 +90,12 @@ namespace ActorStudio
             var displayInformation = DisplayInformation.GetForCurrentView();
             var file = await PicturesHelper.SaveResultBufferAsync(pixelBuffer, rtb.PixelWidth, rtb.PixelHeight, displayInformation.RawDpiX, displayInformation.RawDpiY);
             
-            GameStateMachineVM.ResultImage = new BitmapImage(new Uri(file.Path));
+            GameStateMachineVm.ResultImage = new BitmapImage(new Uri(file.Path));
         }
 
         private async void PrintHelper_OnPrintTaskFinished()
         {
-            await this.GameStateMachineVM.EndGameAsync();
+            await GameStateMachineVm.EndGameAsync();
         }
     }
 }

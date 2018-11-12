@@ -81,7 +81,7 @@ namespace FaceApiProxy
                             personName,
                             faceLink));
                     }
-                    catch (Microsoft.ProjectOxford.Face.FaceAPIException e)
+                    catch (FaceAPIException e)
                     {
                         if (e.ErrorCode == "RateLimitExceeded")
                         {
@@ -94,7 +94,7 @@ namespace FaceApiProxy
                         }
                         // otherwise, just ignore this image
                     }
-                } while (rateLimitExceeded == true);
+                } while (rateLimitExceeded);
 
                 return persistedFaces;
             }
@@ -126,7 +126,7 @@ namespace FaceApiProxy
                     var createdPerson = await faceClient.CreatePersonAsync(personGroupId, personName);
                     return createdPerson.PersonId;
                 }
-                catch (Microsoft.ProjectOxford.Face.FaceAPIException e)
+                catch (FaceAPIException e)
                 {
                     if (e.ErrorCode == "RateLimitExceeded")
                     {
@@ -139,7 +139,7 @@ namespace FaceApiProxy
                     }
                     // otherwise, just ignore this image
                 }
-            } while (rateLimitExceeded == true);
+            } while (rateLimitExceeded);
 
             return Guid.Empty;
         }
@@ -174,7 +174,7 @@ namespace FaceApiProxy
                             personName,
                             filePath));
                     }
-                    catch (Microsoft.ProjectOxford.Face.FaceAPIException e)
+                    catch (FaceAPIException e)
                     {
                         if (e.ErrorCode == "RateLimitExceeded")
                         {
@@ -187,7 +187,7 @@ namespace FaceApiProxy
                         }
                         // otherwise, just ignore this image
                     }
-                } while (rateLimitExceeded == true);
+                } while (rateLimitExceeded);
 
                 return persistedFaces;
             }

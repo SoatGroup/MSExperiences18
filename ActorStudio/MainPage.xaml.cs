@@ -1,4 +1,5 @@
 ﻿using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Input;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -11,7 +12,7 @@ namespace ActorStudio
     {
         public MainPage()
         {
-            this.InitializeComponent();
+            InitializeComponent();
         }
 
         /// <summary>
@@ -32,7 +33,7 @@ namespace ActorStudio
             }
         }
 
-        private void TextBlock_Tapped(object sender, Windows.UI.Xaml.Input.TappedRoutedEventArgs e)
+        private void TextBlock_Tapped(object sender, TappedRoutedEventArgs e)
         {
             navSplitView.IsPaneOpen = !navSplitView.IsPaneOpen;
         }

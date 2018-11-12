@@ -1,7 +1,4 @@
-﻿using Microsoft.ProjectOxford.Face;
-using Microsoft.ProjectOxford.Face.Contract;
-using Microsoft.Toolkit.Uwp.Connectivity;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -18,10 +15,14 @@ using Windows.Media.FaceAnalysis;
 using Windows.Media.MediaProperties;
 using Windows.Storage;
 using Windows.Storage.Streams;
-using Windows.UI;
+using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
+using Windows.UI.Xaml.Shapes;
+using Microsoft.ProjectOxford.Face;
+using Microsoft.ProjectOxford.Face.Contract;
+using Microsoft.Toolkit.Uwp.Connectivity;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 
@@ -38,17 +39,17 @@ namespace FaceControls
         private FaceDetectionEffect _faceDetectionEffect;
         private VideoEncodingProperties _previewProperties;
         private FaceTracker _faceTracker;
-        private bool isPreviewing;
+        private bool _isPreviewing;
         private bool _mirroringPreview = true;
-        private BitmapIcon smiley;
-        private BitmapIcon smileyNeutral;
+        private BitmapIcon _smiley;
+        private BitmapIcon _smileyNeutral;
 
         public FaceServiceClient FaceClient;
 
         //0 for false, 1 for true.
-        private static int isCheckingSmile = 0;
-        private object isSmilingLock = new object();
-        private DateTime? lastSmileCheck;
+        private static int _isCheckingSmile;
+        private object _isSmilingLock = new object();
+        private DateTime? _lastSmileCheck;
 
         public string Status { get; set; }
         public bool IsCheckSmileEnabled { get; set; }
@@ -61,16 +62,16 @@ namespace FaceControls
 
         public FaceTrackingControl()
         {
-            this.InitializeComponent();
+            InitializeComponent();
 
-            isPreviewing = false;
+            _isPreviewing = false;
 
-            smiley = new BitmapIcon();
-            smiley.UriSource = new Uri(_smileyAssetPath);
-            smiley.Foreground = _smileyColor;
+            _smiley = new BitmapIcon();
+            _smiley.UriSource = new Uri(_smileyAssetPath);
+            _smiley.Foreground = _smileyColor;
 
-            smileyNeutral = new BitmapIcon();
-            smileyNeutral.Foreground = _smileyColor;
+            _smileyNeutral = new BitmapIcon();
+            _smileyNeutral.Foreground = _smileyColor;
         }
 
         public async Task InitCameraAsync(int cameraIndex, double screenRatio)
@@ -85,7 +86,7 @@ namespace FaceControls
 
                 // Use default initialization
                 MediaCapture = new MediaCapture();
-                MediaCaptureInitializationSettings settings = new MediaCaptureInitializationSettings()
+                MediaCaptureInitializationSettings settings = new MediaCaptureInitializationSettings
                 {
                     StreamingCaptureMode = StreamingCaptureMode.Video,
                     VideoDeviceId = devices[cameraIndex].Id
@@ -95,7 +96,7 @@ namespace FaceControls
 
                 // Set callbacks for failure and recording limit exceeded
                 Status = "Device successfully initialized for video recording!";
-                MediaCapture.Failed += new MediaCaptureFailedEventHandler(mediaCapture_Failed);
+                MediaCapture.Failed += mediaCapture_Failed;
 
                 // Start Preview                
                 PreviewControl.Source = MediaCapture;
@@ -120,12 +121,12 @@ namespace FaceControls
                 {
                     _displayOrientation = _displayInformation.CurrentOrientation;
                 }
-                isPreviewing = true;
+                _isPreviewing = true;
                 Status = "Camera preview succeeded";
 
                 await InitFaceTrackerAsync();
 
-                this._faceTracker = await Windows.Media.FaceAnalysis.FaceTracker.CreateAsync();
+                _faceTracker = await FaceTracker.CreateAsync();
             }
             catch (Exception ex)
             {
@@ -179,7 +180,7 @@ namespace FaceControls
             if (args.ResultFrame.DetectedFaces.Any())
             {
                 var biggestFace = args.ResultFrame.DetectedFaces.OrderByDescending(f => f.FaceBox.Height * f.FaceBox.Width).FirstOrDefault();
-                var faceBounds = new BitmapBounds()
+                var faceBounds = new BitmapBounds
                 {
                     X = biggestFace.FaceBox.X,
                     Y = biggestFace.FaceBox.Y,
@@ -195,19 +196,19 @@ namespace FaceControls
                 }
 
                 // Ask the UI thread to render the face bounding boxes
-                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => HighlightDetectedFaces(args.ResultFrame.DetectedFaces));
+                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => HighlightDetectedFaces(args.ResultFrame.DetectedFaces));
                 FaceDetected?.Invoke(sender, args);
 
                 if (IsCheckSmileEnabled)
                 {
-                    await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () => await CheckSmileAsync());
+                    await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () => await CheckSmileAsync());
                 }
             }
         }
 
         private async void mediaCapture_Failed(MediaCapture currentCaptureObject, MediaCaptureFailedEventArgs currentFailure)
         {
-            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
                 try
                 {
@@ -228,11 +229,11 @@ namespace FaceControls
             if (MediaCapture != null)
             {
                 // Cleanup MediaCapture object
-                if (isPreviewing)
+                if (_isPreviewing)
                 {
                     await MediaCapture.StopPreviewAsync();
                     PreviewControl.Source = null;
-                    isPreviewing = false;
+                    _isPreviewing = false;
                 }
                 _faceDetectionEffect = null;
                 MediaCapture.Dispose();
@@ -258,7 +259,7 @@ namespace FaceControls
             for (int i = 0; i < orderedFaces.Count; i++)
             {
                 // Face coordinate units are preview resolution pixels, which can be a different scale from our display resolution, so a conversion may be necessary
-                Windows.UI.Xaml.Shapes.Rectangle faceBoundingBox = ConvertPreviewToUiRectangle(faces[i].FaceBox);
+                Rectangle faceBoundingBox = ConvertPreviewToUiRectangle(faces[i].FaceBox);
 
                 if (i != 0)
                 {
@@ -273,7 +274,7 @@ namespace FaceControls
                 {
                     var left = Canvas.GetLeft(faceBoundingBox);
                     var top = Canvas.GetTop(faceBoundingBox);
-                    var faceIcon = IsCheckSmileEnabled ? smiley : smileyNeutral;
+                    var faceIcon = IsCheckSmileEnabled ? _smiley : _smileyNeutral;
                     Canvas.SetLeft(faceIcon, left - faceBoundingBox.Width / 4);
                     Canvas.SetTop(faceIcon, top - faceBoundingBox.Height / 4);
                     faceIcon.Width = faceBoundingBox.Width * 1.5;
@@ -285,16 +286,16 @@ namespace FaceControls
 
         private async Task CheckSmileAsync()
         {
-            if (IsCheckSmileEnabled != false && isCheckingSmile != 1 && (lastSmileCheck == null || lastSmileCheck < DateTime.Now.AddSeconds(-1)))
+            if (IsCheckSmileEnabled && _isCheckingSmile != 1 && (_lastSmileCheck == null || _lastSmileCheck < DateTime.Now.AddSeconds(-1)))
             {
                 // 0 indicates that the method is not in use.
-                if (0 == Interlocked.Exchange(ref isCheckingSmile, 1))
+                if (0 == Interlocked.Exchange(ref _isCheckingSmile, 1))
                 {
-                    lastSmileCheck = DateTime.Now;
+                    _lastSmileCheck = DateTime.Now;
 
-                    var requiedFaceAttributes = new FaceAttributeType[] { FaceAttributeType.Smile };
+                    var requiedFaceAttributes = new[] { FaceAttributeType.Smile };
                     var previewProperties = MediaCapture.VideoDeviceController.GetMediaStreamProperties(MediaStreamType.VideoPreview) as VideoEncodingProperties;
-                    double scale = 480d / (double)previewProperties.Height;
+                    double scale = 480d / previewProperties.Height;
                     VideoFrame videoFrame = new VideoFrame(BitmapPixelFormat.Bgra8, (int)(previewProperties.Width * scale), 480);
                     using (var frame = await MediaCapture.GetPreviewFrameAsync(videoFrame))
                     {
@@ -322,7 +323,7 @@ namespace FaceControls
                             }
                         }
                     }
-                    Interlocked.Exchange(ref isCheckingSmile, 0);
+                    Interlocked.Exchange(ref _isCheckingSmile, 0);
                 }
             }
         }
@@ -333,10 +334,10 @@ namespace FaceControls
         /// </summary>
         /// <param name="faceBoxInPreviewCoordinates">Face coordinates as retried from the FaceBox property of a DetectedFace, in preview coordinates.</param>
         /// <returns>Rectangle in UI (CaptureElement) coordinates, to be used in a Canvas control.</returns>
-        private Windows.UI.Xaml.Shapes.Rectangle ConvertPreviewToUiRectangle(BitmapBounds faceBoxInPreviewCoordinates)
+        private Rectangle ConvertPreviewToUiRectangle(BitmapBounds faceBoxInPreviewCoordinates)
         {
-            var result = new Windows.UI.Xaml.Shapes.Rectangle();
-            var previewStream = _previewProperties as VideoEncodingProperties;
+            var result = new Rectangle();
+            var previewStream = _previewProperties;
 
             // If there is no available information about the preview, return an empty rectangle, as re-scaling to the screen coordinates will be impossible
             if (previewStream == null) return result;
@@ -355,15 +356,15 @@ namespace FaceControls
             }
 
             // Get the rectangle that is occupied by the actual video feed
-            var previewInUI = GetPreviewStreamRectInControl(previewStream, PreviewControl);
+            var previewInUi = GetPreviewStreamRectInControl(previewStream, PreviewControl);
 
             // Scale the width and height from preview stream coordinates to window coordinates
-            result.Width = (faceBoxInPreviewCoordinates.Width / streamWidth) * previewInUI.Width;
-            result.Height = (faceBoxInPreviewCoordinates.Height / streamHeight) * previewInUI.Height;
+            result.Width = (faceBoxInPreviewCoordinates.Width / streamWidth) * previewInUi.Width;
+            result.Height = (faceBoxInPreviewCoordinates.Height / streamHeight) * previewInUi.Height;
 
             // Scale the X and Y coordinates from preview stream coordinates to window coordinates
-            var x = (faceBoxInPreviewCoordinates.X / streamWidth) * previewInUI.Width;
-            var y = (faceBoxInPreviewCoordinates.Y / streamHeight) * previewInUI.Height;
+            var x = (faceBoxInPreviewCoordinates.X / streamWidth) * previewInUi.Width;
+            var y = (faceBoxInPreviewCoordinates.Y / streamHeight) * previewInUi.Height;
             Canvas.SetLeft(result, x);
             Canvas.SetTop(result, y);
 
@@ -428,9 +429,9 @@ namespace FaceControls
         {
             InMemoryRandomAccessStream stream = new InMemoryRandomAccessStream();
             ImageEncodingProperties imageProperties = ImageEncodingProperties.CreateJpeg();
-            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () => await MediaCapture.CapturePhotoToStreamAsync(imageProperties, stream));
-            var stream_send = stream.CloneStream().AsStream();
-            return stream_send;
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () => await MediaCapture.CapturePhotoToStreamAsync(imageProperties, stream));
+            var streamSend = stream.CloneStream().AsStream();
+            return streamSend;
         }
 
         public async Task GetCaptureFileAsync(StorageFile photoFile)
@@ -447,7 +448,7 @@ namespace FaceControls
             using (VideoFrame videoFrame = new VideoFrame(BitmapPixelFormat.Bgra8, (int)(_previewProperties.Width * scale), height))
             //using (VideoFrame videoFrame = new VideoFrame(BitmapPixelFormat.Bgra8, (int)previewProperties.Width, (int)previewProperties.Height))
             {
-                await this.MediaCapture.GetPreviewFrameAsync(videoFrame);
+                await MediaCapture.GetPreviewFrameAsync(videoFrame);
 
                 faceBounds = GetFaceBoundsFromFrame(videoFrame, faceBounds, 1);
                 TryExtendFaceBounds(
@@ -496,15 +497,15 @@ namespace FaceControls
 
             // Capture gray image for face detection
             var videoFrame = new VideoFrame(BitmapPixelFormat.Bgra8, (int)(_previewProperties.Width * scale), height);
-            var frame = await this.MediaCapture.GetPreviewFrameAsync(videoFrame);
+            var frame = await MediaCapture.GetPreviewFrameAsync(videoFrame);
             //Capture color image for saving            
             var grayVideoFrame = new VideoFrame(BitmapPixelFormat.Gray8, (int)(_previewProperties.Width * scale), height);
-            var grayFrame = await this.MediaCapture.GetPreviewFrameAsync(grayVideoFrame);
+            var grayFrame = await MediaCapture.GetPreviewFrameAsync(grayVideoFrame);
             // Detect faces
             IList<DetectedFace> faces = null;
             if (FaceDetector.IsBitmapPixelFormatSupported(grayVideoFrame.SoftwareBitmap.BitmapPixelFormat))
             {
-                faces = await this._faceTracker.ProcessNextFrameAsync(grayVideoFrame);
+                faces = await _faceTracker.ProcessNextFrameAsync(grayVideoFrame);
             }
 
             if (faces.Any())
@@ -517,10 +518,6 @@ namespace FaceControls
                     Constants.FaceBoxRatio,
                     ref faceBounds);
                 await SaveBoundedBoxToFileAsync(photoFile, frame.SoftwareBitmap, BitmapEncoder.BmpEncoderId, faceBounds);
-            }
-            else
-            {
-                //TODO what if no face detected ? save full image ?
             }
         }
 

@@ -36,7 +36,8 @@ namespace FaceControls
                 {
                     return (_properties as ImageEncodingProperties).Width;
                 }
-                else if (_properties is VideoEncodingProperties)
+
+                if (_properties is VideoEncodingProperties)
                 {
                     return (_properties as VideoEncodingProperties).Width;
                 }
@@ -53,7 +54,8 @@ namespace FaceControls
                 {
                     return (_properties as ImageEncodingProperties).Height;
                 }
-                else if (_properties is VideoEncodingProperties)
+
+                if (_properties is VideoEncodingProperties)
                 {
                     return (_properties as VideoEncodingProperties).Height;
                 }
@@ -100,7 +102,8 @@ namespace FaceControls
             {
                 return Width + "x" + Height + " [" + AspectRatio + "] " + _properties.Subtype;
             }
-            else if (_properties is VideoEncodingProperties)
+
+            if (_properties is VideoEncodingProperties)
             {
                 return Width + "x" + Height + " [" + AspectRatio + "] " + FrameRate + "FPS " + _properties.Subtype;
             }

@@ -6,7 +6,7 @@ namespace ActorStudio.Controls
     {
         public EmotionsResultControl()
         {
-            this.InitializeComponent();
+            InitializeComponent();
             DataContextChanged += (s, e) =>
             {
                 ViewModel = DataContext as GameViewModel;

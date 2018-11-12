@@ -10,9 +10,9 @@ namespace FaceApiProxy
 
         public TrainedFace(Face face, string personName, string filePath)
         {
-            this.Face = face;
-            this.PersonName = personName;
-            this.FilePath = filePath;
+            Face = face;
+            PersonName = personName;
+            FilePath = filePath;
         }
     }
 }

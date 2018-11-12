@@ -46,13 +46,13 @@
                 <TextBlock Name="tbInstructions"
                         FontSize="100"
                         TextAlignment="Center"
-                        Text="{x:Bind GameStateMachineVM.Instructions, Mode=OneWay}"
+                        Text="{x:Bind GameStateMachineVm.Instructions, Mode=OneWay}"
                         VerticalAlignment="Top"
                         HorizontalAlignment="Center"
                         Foreground="{StaticResource InstructionsTextColor}"/>
             </toolkitControls:DropShadowPanel>
             <Grid HorizontalAlignment="Center"
-                  Visibility="{x:Bind GameStateMachineVM.IsFaceMatchVisible, Mode=OneWay}"
+                  Visibility="{x:Bind GameStateMachineVm.IsFaceMatchVisible, Mode=OneWay}"
                   Width="930"
                   Height="450">
                 <Grid.ColumnDefinitions>
@@ -60,16 +60,16 @@
                     <ColumnDefinition Width="30"/>
                     <ColumnDefinition Width="*"/>
                 </Grid.ColumnDefinitions>
-                <Image Source="{x:Bind GameStateMachineVM.OriginalFaceImage, Mode=OneWay}" 
+                <Image Source="{x:Bind GameStateMachineVm.OriginalFaceImage, Mode=OneWay}" 
                        HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                        RenderTransformOrigin="0.5,0.5"
                        Grid.Column="0"
                        Stretch="UniformToFill"/>
                 <Grid Background="DarkGray"
-                      Visibility="{x:Bind GameStateMachineVM.IsFaceMatchingRunning, Mode=OneWay}"                                  
+                      Visibility="{x:Bind GameStateMachineVm.IsFaceMatchingRunning, Mode=OneWay}"                                  
                       Grid.Column="2">
                 </Grid>
-                <Image Source="{x:Bind GameStateMachineVM.RecognizedFaceImage, Mode=OneWay}" 
+                <Image Source="{x:Bind GameStateMachineVm.RecognizedFaceImage, Mode=OneWay}" 
                        HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                        RenderTransformOrigin="0.5,0.5"                       
                        Grid.Column="2"
@@ -81,14 +81,14 @@
                                 Height="50" Width="50"
                                 IsActive="True"/>
                 <Grid Grid.ColumnSpan="3"
-                      Visibility="{x:Bind GameStateMachineVM.IsFaceMatchingRunning, Mode=OneWay}">
+                      Visibility="{x:Bind GameStateMachineVm.IsFaceMatchingRunning, Mode=OneWay}">
                     <Ellipse Width="140" Height="140" Fill="{StaticResource ScoreBackgroundColor}"
                              Stroke="Black"
                              StrokeThickness="2"/>
                     <Image Width="160" Height="160"
                            Source="ms-appx:///Assets/round.svg"
                            Grid.ColumnSpan="3"/>
-                    <TextBlock Text="{x:Bind GameStateMachineVM.Confidence, Mode=OneWay}"
+                    <TextBlock Text="{x:Bind GameStateMachineVm.Confidence, Mode=OneWay}"
                                FontWeight="Bold"
                                FontSize="55"
                                VerticalAlignment="Center" HorizontalAlignment="Center"
@@ -99,19 +99,19 @@
 
         <!--Blur Panel-->
         <Grid Background="{StaticResource AcryclicTransparentBrush}"
-              Visibility="{x:Bind GameStateMachineVM.IsEmotionsResultsVisible, Mode=OneWay}">
+              Visibility="{x:Bind GameStateMachineVm.IsEmotionsResultsVisible, Mode=OneWay}">
         </Grid>
 
         <!--Emotions result Panel-->
         <Viewbox x:Name="EmotionsResultsViewBox"
-                 Visibility="{x:Bind GameStateMachineVM.IsEmotionsResultsVisible, Mode=OneWay}"                 
+                 Visibility="{x:Bind GameStateMachineVm.IsEmotionsResultsVisible, Mode=OneWay}"                 
                   Margin="20">
             <controls:EmotionsResultControl x:Name="ResultControl"/>
         </Viewbox>
 
         <!--Emotions side-panel-->
         <Grid 
-            Visibility="{x:Bind GameStateMachineVM.IsEmotionsCaptureVisible, Mode=OneWay}" >
+            Visibility="{x:Bind GameStateMachineVm.IsEmotionsCaptureVisible, Mode=OneWay}" >
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="5*"/>
                 <ColumnDefinition Width="*"/>
@@ -129,7 +129,7 @@
                 <Image
                     x:Name="UserHappinessImage"
                     Style="{StaticResource UserCapturedImageStyle}"
-                    Source="{x:Bind GameStateMachineVM.UserHappinessImage, Mode=OneWay}"
+                    Source="{x:Bind GameStateMachineVm.UserHappinessImage, Mode=OneWay}"
                     />
             </Border>
 
@@ -139,7 +139,7 @@
                 <Image
                     x:Name="UserSadnessImage"
                     Style="{StaticResource UserCapturedImageStyle}"
-                    Source="{x:Bind GameStateMachineVM.UserSadnessImage, Mode=OneWay}"
+                    Source="{x:Bind GameStateMachineVm.UserSadnessImage, Mode=OneWay}"
                     />
             </Border>
 
@@ -149,7 +149,7 @@
                 <Image
                     x:Name="UserAngerImage"
                     Style="{StaticResource UserCapturedImageStyle}"
-                    Source="{x:Bind GameStateMachineVM.UserAngerImage, Mode=OneWay}"
+                    Source="{x:Bind GameStateMachineVm.UserAngerImage, Mode=OneWay}"
                     />
             </Border>
 
@@ -159,13 +159,13 @@
                 <Image 
                     x:Name="UserSurpriseImage"
                     Style="{StaticResource UserCapturedImageStyle}"
-                    Source="{x:Bind GameStateMachineVM.UserSurpriseImage, Mode=OneWay}"/>
+                    Source="{x:Bind GameStateMachineVm.UserSurpriseImage, Mode=OneWay}"/>
             </Border>
         </Grid>
 
         <!--Capture Timer-->
         <TextBlock Name="timerText"
-                   Text="{x:Bind GameStateMachineVM.TimerDisplay, Mode=OneWay}"
+                   Text="{x:Bind GameStateMachineVm.TimerDisplay, Mode=OneWay}"
                        Opacity=".5"
                        FontSize="200"
                        FontWeight="Bold"

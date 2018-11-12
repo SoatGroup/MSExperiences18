@@ -7,7 +7,7 @@ namespace ActorStudio.Controls
     {
         public ScoreControl()
         {
-            this.InitializeComponent();
+            InitializeComponent();
         }
 
         /// <summary>

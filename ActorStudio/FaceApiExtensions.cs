@@ -1,7 +1,4 @@
-﻿using FaceApiProxy;
-using Microsoft.ProjectOxford.Face;
-using Microsoft.ProjectOxford.Face.Contract;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -11,6 +8,9 @@ using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.Search;
 using Windows.Storage.Streams;
+using FaceApiProxy;
+using Microsoft.ProjectOxford.Face;
+using Microsoft.ProjectOxford.Face.Contract;
 
 namespace ActorStudio
 {
@@ -20,7 +20,7 @@ namespace ActorStudio
             // picture
             ".jpg",
             ".png",
-            ".bmp",
+            ".bmp"
         };
 
         public static async Task<IEnumerable<TrainedFace>> UploadFacesAsync(FaceServiceClient faceClient, string facesFolder, string facesListId, string facesListName, int imagesCount = 1, bool fromInfoFile = false, string[] mediaFileExtensions = null)
@@ -129,7 +129,7 @@ namespace ActorStudio
                     AddPersistedFaceResult uploadedFace =
                         await faceClient.AddPersonFaceAsync(personGroupId, personId, faceLink, userData: faceLink);
                 }
-                catch (Microsoft.ProjectOxford.Face.FaceAPIException e)
+                catch (FaceAPIException e)
                 {
                     if (e.ErrorCode == "RateLimitExceeded" || e.ErrorMessage.Contains("There is a conflict operation on resource"))
                     {
@@ -141,7 +141,7 @@ namespace ActorStudio
                         return false;
                     }
                 }
-            } while (rateLimitExceeded == true);
+            } while (rateLimitExceeded);
 
             return true;
         }
@@ -161,7 +161,7 @@ namespace ActorStudio
                             await faceClient.AddPersonFaceAsync(personGroupId, personId, imageFileStream.AsStream());
                     }
                 }
-                catch (Microsoft.ProjectOxford.Face.FaceAPIException e)
+                catch (FaceAPIException e)
                 {
                     if (e.ErrorCode == "RateLimitExceeded" ||
                         e.ErrorMessage.Contains("There is a conflict operation on resource"))
@@ -174,7 +174,7 @@ namespace ActorStudio
                         return false;
                     }
                 }
-            } while (rateLimitExceeded == true);
+            } while (rateLimitExceeded);
 
             return true;
         }
@@ -189,39 +189,35 @@ namespace ActorStudio
                 {
                     return null;
                 }
-                else
+
+                // Due to legal limitations, Face API does not support images retrieval in any circumstance currently.You need to store the images and maintain the relationship between face ids and images by yourself.
+                var personsFolder = await KnownFolders.PicturesLibrary.GetFolderAsync(groupImagesFolder);
+                var dataSet = await faceClient.ListPersonsAsync(personGroupId);
+
+                var matches =
+                    from c in response.Candidates
+                    join p in dataSet on c.PersonId equals p.PersonId into ps
+                    from p in ps.DefaultIfEmpty()
+                    select new IdentifiedFace
+                    {
+                        Confidence = c.Confidence,
+                        PersonName = p == null ? "(No matching face)" : p.Name,
+                        FaceId = c.PersonId
+                    };
+
+                var match = matches.OrderByDescending(m => m.Confidence).FirstOrDefault();
+
+
+                if (match == null)
                 {
-                    // Due to legal limitations, Face API does not support images retrieval in any circumstance currently.You need to store the images and maintain the relationship between face ids and images by yourself.
-                    var personsFolder = await KnownFolders.PicturesLibrary.GetFolderAsync(groupImagesFolder);
-                    var _dataSet = await faceClient.ListPersonsAsync(personGroupId);
-
-                    var matches =
-                        from c in response.Candidates
-                        join p in _dataSet on c.PersonId equals p.PersonId into ps
-                        from p in ps.DefaultIfEmpty()
-                        select new IdentifiedFace()
-                        {
-                            Confidence = c.Confidence,
-                            PersonName = p == null ? "(No matching face)" : p.Name,
-                            FaceId = c.PersonId
-                        };
-
-                    var match = matches.OrderByDescending(m => m.Confidence).FirstOrDefault();
-
-
-                    if (match == null)
-                    {
-                        return null;
-                    }
-                    else
-                    {
-                        var matchFile = await personsFolder.GetFileAsync($"{match.PersonName}.{Constants.LocalPersonFileExtension}");
-
-                        IRandomAccessStream photoStream = await matchFile.OpenReadAsync();
-                        match.FaceStream = photoStream.CloneStream().AsStream();
-                        return match;
-                    }
+                    return null;
                 }
+
+                var matchFile = await personsFolder.GetFileAsync($"{match.PersonName}.{Constants.LocalPersonFileExtension}");
+
+                IRandomAccessStream photoStream = await matchFile.OpenReadAsync();
+                match.FaceStream = photoStream.CloneStream().AsStream();
+                return match;
             }
             catch (Exception)
             {

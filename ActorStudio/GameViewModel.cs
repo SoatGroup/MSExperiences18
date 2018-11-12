@@ -1,8 +1,4 @@
-﻿using FaceApiProxy;
-using Microsoft.ProjectOxford.Common.Contract;
-using Microsoft.ProjectOxford.Face;
-using Microsoft.Toolkit.Uwp.Connectivity;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
@@ -11,16 +7,23 @@ using System.Threading;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Resources;
 using Windows.Graphics.Imaging;
+using Windows.Media.Core;
 using Windows.Media.FaceAnalysis;
 using Windows.Storage;
 using Windows.Storage.Streams;
 using Windows.UI.Core;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
+using FaceApiProxy;
+using FaceControls;
+using Microsoft.ProjectOxford.Common.Contract;
+using Microsoft.ProjectOxford.Face;
+using Microsoft.ProjectOxford.Face.Contract;
+using Microsoft.Toolkit.Uwp.Connectivity;
 
 namespace ActorStudio
 {
-    public partial class GameViewModel : INotifyPropertyChanged
+    public class GameViewModel : INotifyPropertyChanged
     {
         private GameState _currentState;
         private string _instructions;
@@ -34,9 +37,9 @@ namespace ActorStudio
 
         private FaceServiceClient _faceClient;
         private CoreDispatcher _dispatcher;
-        private FaceControls.FaceTrackingControl _faceTrackingControl;
+        private FaceTrackingControl _faceTrackingControl;
         //0 for false, 1 for true.
-        private static int isCheckingSmile = 0;
+        private static int _isCheckingSmile;
 
         public event PropertyChangedEventHandler PropertyChanged;
         public event EventHandler ImageCaptured;
@@ -166,7 +169,7 @@ namespace ActorStudio
 
             await Task.Delay(10000);
 
-            this.CurrentState = GameState.Idle;
+            CurrentState = GameState.Idle;
         }
 
         #region Face Matching Images
@@ -300,8 +303,8 @@ namespace ActorStudio
         #endregion User Captured Images and Scores
 
         private Timer _timer;
-        private const int _emotionCaptureDelayInSeconds = 3;
-        private int _invokeTimerCount = 0;
+        private const int EmotionCaptureDelayInSeconds = 3;
+        private int _invokeTimerCount;
         private string _timerDisplay;
 
         public string TimerDisplay
@@ -316,11 +319,11 @@ namespace ActorStudio
 
         public GameViewModel()
         {
-            ResourceLoader = new Windows.ApplicationModel.Resources.ResourceLoader();
+            ResourceLoader = new ResourceLoader();
             _faceClient = new FaceServiceClient(Constants.AzureFaceApiKey, Constants.AzureFaceApiRoot);
         }
 
-        internal async void StartAsync(FaceControls.FaceTrackingControl faceTrackingControl, Windows.UI.Core.CoreDispatcher dispatcher)
+        internal async void StartAsync(FaceTrackingControl faceTrackingControl, CoreDispatcher dispatcher)
         {
             _dispatcher = dispatcher;
             _faceTrackingControl = faceTrackingControl;
@@ -328,7 +331,7 @@ namespace ActorStudio
             _faceTrackingControl.FaceDetected += FaceTrackingControl_FaceDetected;
             _faceTrackingControl.SmileDetected += FaceTrackingControl_SmileDetected;
 
-            await _dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
+            await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
             {
                 try
                 {
@@ -379,10 +382,10 @@ namespace ActorStudio
             CurrentState = GameState.EmotionsCaptures;
         }
 
-        public async void FaceTrackingControl_FaceDetected(Windows.Media.Core.FaceDetectionEffect sender, Windows.Media.Core.FaceDetectedEventArgs args)
+        public async void FaceTrackingControl_FaceDetected(FaceDetectionEffect sender, FaceDetectedEventArgs args)
         {
             var areBigFacesDetected = CheckBigFaces(args.ResultFrame.DetectedFaces);
-            await _dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
+            await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
                 {
                     if (CurrentState == GameState.FacesDetection)
                     {
@@ -421,11 +424,11 @@ namespace ActorStudio
                 });
         }
 
-        private async void FaceTrackingControl_SmileDetected(object sender, Microsoft.ProjectOxford.Face.Contract.Face face)
+        private async void FaceTrackingControl_SmileDetected(object sender, Face face)
         {
-            if (CurrentState == GameState.CheckingSmile && isCheckingSmile != 1)
+            if (CurrentState == GameState.CheckingSmile && _isCheckingSmile != 1)
             {
-                var facebox = new BitmapBounds()
+                var facebox = new BitmapBounds
                 {
                     Height = (uint)face.FaceRectangle.Height,
                     Width = (uint)face.FaceRectangle.Width,
@@ -438,14 +441,14 @@ namespace ActorStudio
 
         private async Task StartFaceRecognitionAsync(BitmapBounds facebox)
         {
-            await _dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
+            await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
             {
                 ImageCaptured?.Invoke(this, null);
 
                 CurrentState = GameState.FaceRecognition;
 
                 // 0 indicates that the method is not in use.
-                if (0 == Interlocked.Exchange(ref isCheckingSmile, 1))
+                if (0 == Interlocked.Exchange(ref _isCheckingSmile, 1))
                 {
                     if (NetworkHelper.Instance.ConnectionInformation.IsInternetAvailable)
                     {
@@ -470,7 +473,7 @@ namespace ActorStudio
                     {
                         await StartFaceRecognizedAsync(null);
                     }
-                    Interlocked.Exchange(ref isCheckingSmile, 0);
+                    Interlocked.Exchange(ref _isCheckingSmile, 0);
                 }
                 IsFaceMatchingRunning = false;
             });
@@ -500,7 +503,7 @@ namespace ActorStudio
             Instructions = ResourceLoader.GetString("Instructions_StartEmotions");
             await Task.Delay(Constants.WaitBeforeEmotionCaptureMsDelay);
 
-            var captureTimerDelay = TimeSpan.FromSeconds(_emotionCaptureDelayInSeconds);
+            var captureTimerDelay = TimeSpan.FromSeconds(EmotionCaptureDelayInSeconds);
 
             await WaitAndCaptureEmotionAsync(ResourceLoader.GetString("Emotion_Hapiness"), captureTimerDelay, Emotion.Hapiness);
 
@@ -527,7 +530,7 @@ namespace ActorStudio
 
             string filePath;
 
-            await _dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
+            await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
             {
                 StorageFile photoFile = await KnownFolders.PicturesLibrary.CreateFileAsync(Constants.FaceCatpureFileName, CreationCollisionOption.GenerateUniqueName);
                 await _faceTrackingControl.CaptureFaceToFileAsync(photoFile);
@@ -588,7 +591,7 @@ namespace ActorStudio
         {
             try
             {
-                var requiredFaceAttributes = new FaceAttributeType[] { FaceAttributeType.Emotion };
+                var requiredFaceAttributes = new[] { FaceAttributeType.Emotion };
                 var attributes = await FaceApiHelper.DetectEmotionsAsync(_faceClient, photoStream.AsStream(), requiredFaceAttributes);
                 return attributes?.Emotion;
             }
@@ -601,13 +604,13 @@ namespace ActorStudio
 
         private async void DisplayResultsAsync()
         {
-            await _dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
+            await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
             {
                 IsEmotionsResultsVisible = true;
                 AllEmotionsCaptured?.Invoke(this, null);
                 IsEmotionsCaptureVisible = false;
                 await Task.Delay(3000);
-                this.CurrentState = GameState.WaitForPrint;
+                CurrentState = GameState.WaitForPrint;
             });
         }
 
@@ -619,14 +622,14 @@ namespace ActorStudio
 
         private async void TimerCallBack(object state)
         {
-            if (_invokeTimerCount >= _emotionCaptureDelayInSeconds)
+            if (_invokeTimerCount >= EmotionCaptureDelayInSeconds)
             {
                 await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => { TimerDisplay = null; });
                 _timer.Dispose();
             }
             else
             {
-                var remainingSeconds = _emotionCaptureDelayInSeconds - _invokeTimerCount;
+                var remainingSeconds = EmotionCaptureDelayInSeconds - _invokeTimerCount;
                 await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => { TimerDisplay = remainingSeconds.ToString(); });
                 _invokeTimerCount++;
             }
