@@ -1,13 +1,11 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="Microsoft.ProjectOxford.Face">
-      <HintPath>..\..\..\..\.nuget\packages\microsoft.projectoxford.face\1.4.0\lib\portable-net45+wp80+win8+wpa81+aspnetcore50\Microsoft.ProjectOxford.Face.dll</HintPath>
-    </Reference>
+    <PackageReference Include="Microsoft.ProjectOxford.Face" Version="1.4.0" />
   </ItemGroup>
 
 </Project>
