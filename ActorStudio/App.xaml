@@ -5,6 +5,7 @@
     xmlns:local="using:ActorStudio">
 
     <Application.Resources>
+        <!--Colors-->
         <Color x:Key="PrimaryColor">#ffdb29</Color>
         <Color x:Key="SecondaryColor">#4C83A1</Color>
 
@@ -26,18 +27,18 @@
         <SolidColorBrush x:Name="ScoreBackgroundColor" Color="{StaticResource PrimaryColor}"/>
 
         <SolidColorBrush x:Name="EmotionTextColor" Color="{StaticResource PrimaryColor}"/>
-        
+
         <SolidColorBrush x:Name="AccesoryRewardColor" Color="{StaticResource PrimaryColor}"/>
 
-        <x:String x:Key="HapinessUpper">LA JOIE</x:String>
-        <x:String x:Key="Hapiness">La Joie</x:String>
-        <x:String x:Key="SadnessUpper">LA TRISTESSE</x:String>
-        <x:String x:Key="Sadness">La Tristesse</x:String>
-        <x:String x:Key="SupriseUpper">LA SUPRISE</x:String>
-        <x:String x:Key="Suprise">La Suprise</x:String>
-        <x:String x:Key="AngerUpper">LA COLÈRE</x:String>
-        <x:String x:Key="Anger">La Colère</x:String>
+        <!--Acrylic-->
+        <Color x:Key="AcrylicColor">#6399c0</Color>
+        <AcrylicBrush x:Key="AcryclicTransparentBrush"
+            BackgroundSource="Backdrop"
+            TintColor="{StaticResource AcrylicColor}"
+            TintOpacity="0"
+            FallbackColor="{StaticResource AcrylicColor}"/>
 
+        <!--Styles-->
         <Style x:Name="UserCapturedImageStyle" TargetType="Image">
             <Style.Setters>
                 <Setter Property="Margin" Value="5"/>
@@ -55,7 +56,5 @@
                 <Setter Property="BorderBrush" Value="{StaticResource UserCaptureBorderColor}"/>
             </Style.Setters>
         </Style>
-
     </Application.Resources>
-
 </Application>

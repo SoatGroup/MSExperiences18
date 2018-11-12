@@ -20,9 +20,9 @@ using Windows.UI.Xaml.Media.Imaging;
 
 namespace ActorStudio
 {
-    public class StateMachine : INotifyPropertyChanged
+    public partial class GameViewModel : INotifyPropertyChanged
     {
-        private State _currentState;
+        private GameState _currentState;
         private string _instructions;
         private string _confidence;
         private bool _isFaceMatchVisible;
@@ -102,7 +102,7 @@ namespace ActorStudio
             }
         }
 
-        public State CurrentState
+        public GameState CurrentState
         {
             get => _currentState;
             set
@@ -115,30 +115,30 @@ namespace ActorStudio
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentState)));
                     switch (value)
                     {
-                        case State.FacesDetection:
+                        case GameState.FacesDetection:
                             // Start face detection
                             _faceTrackingControl.StartFaceTracking();
                             Instructions = null;
                             break;
-                        case State.CheckingSmile:
+                        case GameState.CheckingSmile:
                             Instructions = ResourceLoader.GetString("Instructions_CheckingSmile");
                             Task.Delay(2000);
                             _faceTrackingControl.IsCheckSmileEnabled = true;
                             break;
-                        case State.FaceRecognition:
+                        case GameState.FaceRecognition:
                             _faceTrackingControl.StopFaceTracking();
                             _faceTrackingControl.IsCheckSmileEnabled = false;
                             break;
-                        case State.EmotionsCaptures:
+                        case GameState.EmotionsCaptures:
                             _faceTrackingControl.StopFaceTracking();
                             _faceTrackingControl.IsCheckSmileEnabled = false;
                             StartCaptureEmotionsAsync();
                             break;
-                        case State.GameEnded:
+                        case GameState.GameEnded:
                             DisplayResultsAsync();
                             break;
-                        case State.Idle:
-                            CurrentState = State.FacesDetection;
+                        case GameState.Idle:
+                            CurrentState = GameState.FacesDetection;
                             break;
                         default:
                             _faceTrackingControl.StopFaceTracking();
@@ -166,7 +166,7 @@ namespace ActorStudio
 
             await Task.Delay(10000);
 
-            this.CurrentState = State.Idle;
+            this.CurrentState = GameState.Idle;
         }
 
         #region Face Matching Images
@@ -314,10 +314,10 @@ namespace ActorStudio
             }
         }
 
-        public StateMachine()
+        public GameViewModel()
         {
             ResourceLoader = new Windows.ApplicationModel.Resources.ResourceLoader();
-            _faceClient = new FaceServiceClient("34f95dfe9ef7460e9bfbd19987a5b6c3", "https://westeurope.api.cognitive.microsoft.com/face/v1.0");
+            _faceClient = new FaceServiceClient(Constants.AzureFaceApiKey, Constants.AzureFaceApiRoot);
         }
 
         internal async void StartAsync(FaceControls.FaceTrackingControl faceTrackingControl, Windows.UI.Core.CoreDispatcher dispatcher)
@@ -334,7 +334,7 @@ namespace ActorStudio
                 {
                     await _faceTrackingControl.InitCameraAsync(Constants.CameraIndex, Constants.ScreenRatio);
 
-                    CurrentState = State.FacesDetection;
+                    CurrentState = GameState.FacesDetection;
                 }
                 catch (Exception ex)
                 {
@@ -352,7 +352,7 @@ namespace ActorStudio
             }
             else
             {
-                using (var photoStream = await PicturesHelper.GetPersonPictureAsync(Constants._celebFacesGroupFolder, match.PersonName))
+                using (var photoStream = await PicturesHelper.GetPersonPictureAsync(Constants.AzureCelebFacesGroupFolder, match.PersonName))
                 {
                     BitmapImage bitmap = new BitmapImage();
                     bitmap.SetSource(photoStream);
@@ -376,7 +376,7 @@ namespace ActorStudio
             Instructions = ResourceLoader.GetString("Instructions_StartGame");
             await Task.Delay(5000);
 
-            CurrentState = State.EmotionsCaptures;
+            CurrentState = GameState.EmotionsCaptures;
         }
 
         public async void FaceTrackingControl_FaceDetected(Windows.Media.Core.FaceDetectionEffect sender, Windows.Media.Core.FaceDetectedEventArgs args)
@@ -384,13 +384,13 @@ namespace ActorStudio
             var areBigFacesDetected = CheckBigFaces(args.ResultFrame.DetectedFaces);
             await _dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
                 {
-                    if (CurrentState == State.FacesDetection)
+                    if (CurrentState == GameState.FacesDetection)
                     {
                         // actually checking faces in screen
                         if (areBigFacesDetected)
                         {
                             // at least one 'big' face is detected so ew enable the smile check
-                            CurrentState = State.CheckingSmile;
+                            CurrentState = GameState.CheckingSmile;
                         }
                         else if (args.ResultFrame.DetectedFaces.Any())
                         {
@@ -403,14 +403,14 @@ namespace ActorStudio
                             Instructions = null;
                         }
                     }
-                    else if (CurrentState == State.CheckingSmile)
+                    else if (CurrentState == GameState.CheckingSmile)
                     {
                         //actually checking smile one 'big' faces (with smileDetected event)
                         if (areBigFacesDetected == false)
                         {
                             // if no face was detected, return to state WaitingBigFace
                             // careful to multiple facetracking
-                            CurrentState = State.FacesDetection;
+                            CurrentState = GameState.FacesDetection;
                         }
                         else if (NetworkHelper.Instance.ConnectionInformation.IsInternetAvailable == false)
                         {
@@ -423,7 +423,7 @@ namespace ActorStudio
 
         private async void FaceTrackingControl_SmileDetected(object sender, Microsoft.ProjectOxford.Face.Contract.Face face)
         {
-            if (CurrentState == State.CheckingSmile && isCheckingSmile != 1)
+            if (CurrentState == GameState.CheckingSmile && isCheckingSmile != 1)
             {
                 var facebox = new BitmapBounds()
                 {
@@ -442,7 +442,7 @@ namespace ActorStudio
             {
                 ImageCaptured?.Invoke(this, null);
 
-                CurrentState = State.FaceRecognition;
+                CurrentState = GameState.FaceRecognition;
 
                 // 0 indicates that the method is not in use.
                 if (0 == Interlocked.Exchange(ref isCheckingSmile, 1))
@@ -450,7 +450,9 @@ namespace ActorStudio
                     if (NetworkHelper.Instance.ConnectionInformation.IsInternetAvailable)
                     {
                         //store the captured image
-                        var photoFile = await KnownFolders.PicturesLibrary.CreateFileAsync(Constants.PHOTO_FILE_NAME, CreationCollisionOption.GenerateUniqueName);
+                        var photoFile = await KnownFolders.PicturesLibrary.CreateFileAsync(
+                            Constants.FaceCatpureFileName + '.' + Constants.FaceCatpureFileExtension, 
+                            CreationCollisionOption.GenerateUniqueName);
                         await _faceTrackingControl.CaptureFaceToFileAsync(photoFile, facebox);
                         var fileStream = await photoFile.OpenReadAsync();
                         var streamCompare = fileStream.CloneStream();
@@ -461,7 +463,7 @@ namespace ActorStudio
                         IsFaceMatchingRunning = true;
 
                         var streamCheck = fileStream.CloneStream().AsStream();
-                        var match = await FaceDatasetHelper.CheckGroupAsync(_faceClient, streamCheck, Constants._celebFacesListId, Constants._celebFacesGroupFolder);
+                        var match = await FaceDatasetHelper.CheckGroupAsync(_faceClient, streamCheck, Constants.AzureFacesListId, Constants.AzureCelebFacesGroupFolder);
                         await StartFaceRecognizedAsync(match);
                     }
                     else
@@ -508,7 +510,7 @@ namespace ActorStudio
 
             await WaitAndCaptureEmotionAsync(ResourceLoader.GetString("Emotion_Surprise"), captureTimerDelay, Emotion.Surprise);
 
-            CurrentState = State.GameEnded;
+            CurrentState = GameState.GameEnded;
         }
 
         private async Task WaitAndCaptureEmotionAsync(string emotionName, TimeSpan waitDelay, Emotion emotion)
@@ -527,7 +529,7 @@ namespace ActorStudio
 
             await _dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
             {
-                StorageFile photoFile = await KnownFolders.PicturesLibrary.CreateFileAsync(Constants.PHOTO_FILE_NAME, CreationCollisionOption.GenerateUniqueName);
+                StorageFile photoFile = await KnownFolders.PicturesLibrary.CreateFileAsync(Constants.FaceCatpureFileName, CreationCollisionOption.GenerateUniqueName);
                 await _faceTrackingControl.CaptureFaceToFileAsync(photoFile);
                 var fileStream = await photoFile.OpenReadAsync();
                 var imageStream = fileStream.CloneStream();
@@ -605,7 +607,7 @@ namespace ActorStudio
                 AllEmotionsCaptured?.Invoke(this, null);
                 IsEmotionsCaptureVisible = false;
                 await Task.Delay(3000);
-                this.CurrentState = State.WaitForPrint;
+                this.CurrentState = GameState.WaitForPrint;
             });
         }
 
@@ -628,14 +630,6 @@ namespace ActorStudio
                 await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => { TimerDisplay = remainingSeconds.ToString(); });
                 _invokeTimerCount++;
             }
-        }
-
-        private enum Emotion
-        {
-            Hapiness,
-            Surprise,
-            Sadness,
-            Anger
         }
     }
 }

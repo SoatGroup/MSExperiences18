@@ -19,13 +19,13 @@ namespace ActorStudio
         private Compositor _compositor;
         PrintHelper printHelper;
 
-        public StateMachine GameStateMachineVM { get; set; }
+        public GameViewModel GameStateMachineVM { get; set; }
 
         public FaceTrackingPage()
         {
             this.InitializeComponent();
             this.DataContextChanged += (s, e) => Bindings.Update();
-            GameStateMachineVM = this.DataContext as StateMachine;
+            GameStateMachineVM = this.DataContext as GameViewModel;
 
             var dispatcher = Windows.ApplicationModel.Core.CoreApplication.GetCurrentView().CoreWindow.Dispatcher;
             GameStateMachineVM.StartAsync(FaceTrackingControl, dispatcher);

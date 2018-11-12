@@ -1,6 +1,6 @@
 ﻿namespace ActorStudio
 {
-    public enum State
+    public enum GameState
     {
         Idle,
         FacesDetection,

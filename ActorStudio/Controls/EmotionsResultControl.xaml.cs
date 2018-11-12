@@ -9,10 +9,10 @@ namespace ActorStudio.Controls
             this.InitializeComponent();
             DataContextChanged += (s, e) =>
             {
-                ViewModel = DataContext as StateMachine;
+                ViewModel = DataContext as GameViewModel;
             };
         }
 
-        public StateMachine ViewModel { get; set; }
+        public GameViewModel ViewModel { get; set; }
     }
 }

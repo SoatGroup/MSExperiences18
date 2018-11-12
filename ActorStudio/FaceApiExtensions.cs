@@ -219,17 +219,7 @@ namespace ActorStudio
                     }
                     else
                     {
-                        var matchFile = await personsFolder.GetFileAsync($"{match.PersonName}.jpg");
-
-                        //var personFolder = await personsFolder.GetFolderAsync(match.PersonName);
-
-                        //// Take first image in folder
-                        //var queryOptions = new QueryOptions(CommonFileQuery.OrderByName, DefaultMediaFileExtensions);
-                        //queryOptions.FolderDepth = FolderDepth.Shallow;
-
-                        //var query = personFolder.CreateFileQueryWithOptions(queryOptions);
-                        //var imgFiles = await query.GetFilesAsync();
-                        //var matchFile = imgFiles.First();
+                        var matchFile = await personsFolder.GetFileAsync($"{match.PersonName}.{Constants.LocalPersonFileExtension}");
 
                         IRandomAccessStream photoStream = await matchFile.OpenReadAsync();
                         match.FaceStream = photoStream.CloneStream().AsStream();

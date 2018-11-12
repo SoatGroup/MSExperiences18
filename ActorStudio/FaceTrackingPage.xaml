@@ -12,14 +12,6 @@
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <Page.Resources>
-        <!-- Acrylic -->
-        <Color x:Key="AcrylicColor">#6399c0</Color>
-        <AcrylicBrush x:Key="AcryclicTransparentBrush"
-            BackgroundSource="Backdrop"
-            TintColor="{StaticResource AcrylicColor}"
-            TintOpacity="0"
-            FallbackColor="{StaticResource AcrylicColor}"/>
-
         <!-- Storyboard resource: Animates a rectangle's opacity. -->
         <Storyboard x:Name="flashStoryboard">
             <DoubleAnimationUsingKeyFrames
@@ -34,7 +26,7 @@
     </Page.Resources>
 
     <Page.DataContext>
-        <local:StateMachine />
+        <local:GameViewModel />
     </Page.DataContext>
 
     <Grid>
