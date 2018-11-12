@@ -27,11 +27,14 @@ namespace ActorStudio
             GameStateMachineVm = DataContext as GameViewModel;
 
             var dispatcher = CoreApplication.GetCurrentView().CoreWindow.Dispatcher;
-            GameStateMachineVm.StartAsync(FaceTrackingControl, dispatcher);
+            if (GameStateMachineVm != null)
+            {
+                GameStateMachineVm.StartAsync(FaceTrackingControl, dispatcher);
 
-            GameStateMachineVm.ImageCaptured += GameStateMachineVM_ImageCaptured;
-            GameStateMachineVm.AllEmotionsCaptured += GameStateMachineVM_AllEmotionsCaptured;
-            
+                GameStateMachineVm.ImageCaptured += GameStateMachineVM_ImageCaptured;
+                GameStateMachineVm.AllEmotionsCaptured += GameStateMachineVM_AllEmotionsCaptured;
+            }
+
             // Connect Animation custom settings, the default animation is 0.8s with no easig and may need to be customized
             var compositor = ElementCompositionPreview.GetElementVisual(this).Compositor;
             var connectedAnimationService = ConnectedAnimationService.GetForCurrentView();

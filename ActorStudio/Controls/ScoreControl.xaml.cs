@@ -15,8 +15,8 @@ namespace ActorStudio.Controls
         /// </summary>
         public string Text
         {
-            get { return (string)GetValue(TextProperty); }
-            set { SetValue(TextProperty, value); }
+            get => (string)GetValue(TextProperty);
+            set => SetValue(TextProperty, value);
         }
 
         /// <summary>
@@ -24,8 +24,8 @@ namespace ActorStudio.Controls
         /// </summary>
         public string Score
         {
-            get { return (string)GetValue(ScoreProperty); }
-            set { SetValue(ScoreProperty, value); }
+            get => (string)GetValue(ScoreProperty);
+            set => SetValue(ScoreProperty, value);
         }
 
         /// <summary>

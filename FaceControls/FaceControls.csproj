@@ -107,7 +107,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Constants.cs" />
-    <Compile Include="FaceApiExtensions.cs" />
     <Compile Include="FaceTrackingControl.xaml.cs">
       <DependentUpon>FaceTrackingControl.xaml</DependentUpon>
     </Compile>

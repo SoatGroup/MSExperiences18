@@ -22,11 +22,11 @@ namespace ActorStudio
         /// <param name="e"></param>
         private void ListView_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if ((e.AddedItems[0] as ListViewItem).Tag.ToString().Equals("0"))
+            if (((ListViewItem) e.AddedItems[0]).Tag.ToString().Equals("0"))
             {
                 navSplitView.IsPaneOpen = !navSplitView.IsPaneOpen;
             }
-            if ((e.AddedItems[0] as ListViewItem).Tag.ToString().Equals("1"))
+            if (((ListViewItem) e.AddedItems[0]).Tag.ToString().Equals("1"))
             {
                 frmPages.Navigate(typeof(FaceTrackingPage));
                 navSplitView.IsPaneOpen = false;

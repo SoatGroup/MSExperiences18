@@ -35,7 +35,7 @@ namespace ActorStudio
 
         public ResourceLoader ResourceLoader { get; }
 
-        private FaceServiceClient _faceClient;
+        private readonly FaceServiceClient _faceClient;
         private CoreDispatcher _dispatcher;
         private FaceTrackingControl _faceTrackingControl;
         //0 for false, 1 for true.
@@ -555,8 +555,6 @@ namespace ActorStudio
                     case Emotion.Anger:
                         UserAngerImage = originalBitmap;
                         break;
-                    default:
-                        break;
                 }
 
                 var emotionScore = await DetectEmotionAsync(scoreStream);
@@ -575,8 +573,6 @@ namespace ActorStudio
                             break;
                         case Emotion.Anger:
                             AngerScore = $"{Math.Round(emotionScore.Anger * 100, 0)}%";
-                            break;
-                        default:
                             break;
                     }
                 }

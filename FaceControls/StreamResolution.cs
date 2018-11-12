@@ -8,7 +8,7 @@ namespace FaceControls
     /// </summary>
     class StreamResolution
     {
-        private IMediaEncodingProperties _properties;
+        public IMediaEncodingProperties EncodingProperties { get; }
 
         public StreamResolution(IMediaEncodingProperties properties)
         {
@@ -25,21 +25,21 @@ namespace FaceControls
             }
 
             // Store the actual instance of the IMediaEncodingProperties for setting them later
-            _properties = properties;
+            EncodingProperties = properties;
         }
 
         public uint Width
         {
             get
             {
-                if (_properties is ImageEncodingProperties)
+                if (EncodingProperties is ImageEncodingProperties properties)
                 {
-                    return (_properties as ImageEncodingProperties).Width;
+                    return properties.Width;
                 }
 
-                if (_properties is VideoEncodingProperties)
+                if (EncodingProperties is VideoEncodingProperties encodingProperties)
                 {
-                    return (_properties as VideoEncodingProperties).Width;
+                    return encodingProperties.Width;
                 }
 
                 return 0;
@@ -50,14 +50,14 @@ namespace FaceControls
         {
             get
             {
-                if (_properties is ImageEncodingProperties)
+                if (EncodingProperties is ImageEncodingProperties properties)
                 {
-                    return (_properties as ImageEncodingProperties).Height;
+                    return properties.Height;
                 }
 
-                if (_properties is VideoEncodingProperties)
+                if (EncodingProperties is VideoEncodingProperties encodingProperties)
                 {
-                    return (_properties as VideoEncodingProperties).Height;
+                    return encodingProperties.Height;
                 }
 
                 return 0;
@@ -68,11 +68,11 @@ namespace FaceControls
         {
             get
             {
-                if (_properties is VideoEncodingProperties)
+                if (EncodingProperties is VideoEncodingProperties properties)
                 {
-                    if ((_properties as VideoEncodingProperties).FrameRate.Denominator != 0)
+                    if (properties.FrameRate.Denominator != 0)
                     {
-                        return (_properties as VideoEncodingProperties).FrameRate.Numerator / (_properties as VideoEncodingProperties).FrameRate.Denominator;
+                        return properties.FrameRate.Numerator / properties.FrameRate.Denominator;
                     }
                 }
 
@@ -80,35 +80,6 @@ namespace FaceControls
             }
         }
 
-        public double AspectRatio
-        {
-            get { return Math.Round((Height != 0) ? (Width / (double)Height) : double.NaN, 2); }
-        }
-
-        public IMediaEncodingProperties EncodingProperties
-        {
-            get { return _properties; }
-        }
-
-        /// <summary>
-        /// Output properties to a readable format for UI purposes
-        /// eg. 1920x1080 [1.78] 30fps MPEG
-        /// </summary>
-        /// <returns>Readable string</returns>
-        public string GetFriendlyName(bool showFrameRate = true)
-        {
-            if (_properties is ImageEncodingProperties ||
-                !showFrameRate)
-            {
-                return Width + "x" + Height + " [" + AspectRatio + "] " + _properties.Subtype;
-            }
-
-            if (_properties is VideoEncodingProperties)
-            {
-                return Width + "x" + Height + " [" + AspectRatio + "] " + FrameRate + "FPS " + _properties.Subtype;
-            }
-
-            return String.Empty;
-        }
+        public double AspectRatio => Math.Round((Height != 0) ? (Width / (double)Height) : double.NaN, 2);
     }
 }
