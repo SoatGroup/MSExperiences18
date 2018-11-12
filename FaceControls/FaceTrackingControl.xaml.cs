@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -442,7 +442,7 @@ namespace FaceControls
             {
                 await MediaCapture.GetPreviewFrameAsync(videoFrame);
 
-                faceBounds = GetFaceBoundsFromFrame(videoFrame, faceBounds, 1);
+                faceBounds = GetFaceBoundsFromFrame(faceBounds, 1);
                 TryExtendFaceBounds(
                     videoFrame.SoftwareBitmap.PixelWidth,
                     videoFrame.SoftwareBitmap.PixelHeight,
@@ -492,7 +492,7 @@ namespace FaceControls
             var frame = await MediaCapture.GetPreviewFrameAsync(videoFrame);
             //Capture color image for saving            
             var grayVideoFrame = new VideoFrame(BitmapPixelFormat.Gray8, (int)(_previewProperties.Width * scale), height);
-            var grayFrame = await MediaCapture.GetPreviewFrameAsync(grayVideoFrame);
+            await MediaCapture.GetPreviewFrameAsync(grayVideoFrame);
             // Detect faces
             IList<DetectedFace> faces = null;
             if (FaceDetector.IsBitmapPixelFormatSupported(grayVideoFrame.SoftwareBitmap.BitmapPixelFormat))
@@ -503,7 +503,7 @@ namespace FaceControls
             if ((faces ?? throw new InvalidOperationException()).Any())
             {
                 var mainFace = faces.OrderByDescending(f => f.FaceBox.Height * f.FaceBox.Width).First();
-                var faceBounds = GetFaceBoundsFromFrame(videoFrame, mainFace.FaceBox, 1);
+                var faceBounds = GetFaceBoundsFromFrame(mainFace.FaceBox, 1);
                 TryExtendFaceBounds(
                     videoFrame.SoftwareBitmap.PixelWidth,
                     videoFrame.SoftwareBitmap.PixelHeight,
@@ -513,7 +513,7 @@ namespace FaceControls
             }
         }
 
-        private BitmapBounds GetFaceBoundsFromFrame(VideoFrame videoFrame, BitmapBounds bounds, double scale = 1)
+        private BitmapBounds GetFaceBoundsFromFrame(BitmapBounds bounds, double scale = 1)
         {
             // Apply ratio if needed
             if (scale != 1)
