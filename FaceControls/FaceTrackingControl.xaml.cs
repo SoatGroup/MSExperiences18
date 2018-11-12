@@ -484,7 +484,7 @@ namespace FaceControls
         public async Task CaptureFaceToFileAsync(StorageFile photoFile)
         {
             // Get video frame
-            int height = 480;
+            const int height = 480;
             double scale = height / (double)_previewProperties.Height;
 
             // Capture gray image for face detection
