@@ -1,10 +1,8 @@
 ﻿using Microsoft.Toolkit.Uwp.Helpers;
 using System;
-using System.IO;
 using System.Numerics;
 using System.Threading.Tasks;
 using Windows.Graphics.Display;
-using Windows.Storage;
 using Windows.UI.Composition;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Hosting;
@@ -34,8 +32,7 @@ namespace ActorStudio
 
             GameStateMachineVM.ImageCaptured += GameStateMachineVM_ImageCaptured;
             GameStateMachineVM.AllEmotionsCaptured += GameStateMachineVM_AllEmotionsCaptured;
-
-
+            
             // Connect Animation custom settings, the default animation is 0.8s with no easig and may need to be customized
             this._compositor = ElementCompositionPreview.GetElementVisual(this).Compositor;
             var connectedAnimationService = ConnectedAnimationService.GetForCurrentView();
@@ -56,16 +53,16 @@ namespace ActorStudio
         {
             //Start animations
             var hapinessAnimation = ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("displayHapinessResultAnimation", UserHappinessImage);
-            hapinessAnimation.TryStart(UserHappinessResultImage);
+            hapinessAnimation.TryStart(ResultControl.UserHappinessResultImage);
 
             var sadnessAnimation = ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("displaySadnessAnimation", UserSadnessImage);
-            sadnessAnimation.TryStart(UserSadnessResultImage);
+            sadnessAnimation.TryStart(ResultControl.UserSadnessResultImage);
 
             var angerAnimation = ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("displayAngerResultAnimation", UserAngerImage);
-            angerAnimation.TryStart(UserAngerResultImage);
+            angerAnimation.TryStart(ResultControl.UserAngerResultImage);
 
             var surpriseAnimation = ConnectedAnimationService.GetForCurrentView().PrepareToAnimate("displaySurpriseAnimation", UserSurpriseImage);
-            surpriseAnimation.TryStart(UserSurpriseResultImage);
+            surpriseAnimation.TryStart(ResultControl.UserSurpriseResultImage);
 
             // Wait for the animation to complete
             await Task.Delay(2000);
@@ -76,25 +73,25 @@ namespace ActorStudio
 
         private async Task SendResultToPrinterAsync()
         {
-            printHelper = new PrintHelper(PhotoboothImageGrid);
+            printHelper = new PrintHelper(ResultControl.PhotoboothImageGrid);
             printHelper.OnPrintCanceled += PrintHelper_OnPrintTaskFinished;
             printHelper.OnPrintFailed += PrintHelper_OnPrintTaskFinished;
-            printHelper.OnPrintSucceeded += PrintHelper_OnPrintTaskFinished;            
+            printHelper.OnPrintSucceeded += PrintHelper_OnPrintTaskFinished;
             //bool options = new ;
             await printHelper.ShowPrintUIAsync("Soat - ActorStudio", true);
         }
 
-        private async Task SaveResultImageAsync()
+        public async Task SaveResultImageAsync()
         {
             var rtb = new RenderTargetBitmap();
-            await rtb.RenderAsync(EmotionsResultsGrid);
+            await rtb.RenderAsync(ResultControl);
 
             var pixelBuffer = await rtb.GetPixelsAsync();
 
             var displayInformation = DisplayInformation.GetForCurrentView();
             var file = await PicturesHelper.SaveResultBufferAsync(pixelBuffer, rtb.PixelWidth, rtb.PixelHeight, displayInformation.RawDpiX, displayInformation.RawDpiY);
-          
-            PhotoboothImage.Source = new BitmapImage(new Uri(file.Path));
+            
+            GameStateMachineVM.ResultImage = new BitmapImage(new Uri(file.Path));
         }
 
         private async void PrintHelper_OnPrintTaskFinished()

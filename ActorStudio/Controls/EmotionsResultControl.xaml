@@ -1,0 +1,159 @@
+﻿<UserControl
+    x:Name="root"
+    x:Class="ActorStudio.Controls.EmotionsResultControl"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:ActorStudio.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:ActorStudio.Controls"
+    xmlns:toolkitControls="using:Microsoft.Toolkit.Uwp.UI.Controls"
+    mc:Ignorable="d"
+    Height="560" Width="378">
+    <!--Size should not be changed until print format changes as well-->
+
+    <!--Result panel-->
+    <Grid x:Name="EmotionsResultsGrid">
+
+        <Grid Background="White" >
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="10*"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="10*"/>
+                <ColumnDefinition Width="2*"/>
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="2*"/>
+                <RowDefinition Height="10*"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="10*"/>
+                <RowDefinition Height="2*"/>
+                <RowDefinition Height="8*"/>
+                <RowDefinition Height="2*"/>
+            </Grid.RowDefinitions>
+
+            <!--Hapiness-->
+            <Image
+                        Grid.Column="1"
+                        Grid.Row="1"
+                        x:FieldModifier="public"
+                        x:Name="UserHappinessResultImage"
+                        Style="{StaticResource UserCapturedImageStyle}"
+                        Source="{x:Bind ViewModel.UserHappinessImage, Mode=OneWay}"
+                        />
+            <controls:ScoreControl
+                        x:Uid="Score_Hapiness"
+                        Score="{x:Bind ViewModel.HapinessScore, Mode=OneWay}"
+                        Grid.Column="1"
+                        Grid.Row="1"
+                        Margin="0 0 -12 -12"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"/>
+
+            <!--Sadness-->
+            <Image
+                        Grid.Column="3"
+                        Grid.Row="1"
+                        x:FieldModifier="public"
+                        x:Name="UserSadnessResultImage"
+                        Style="{StaticResource UserCapturedImageStyle}"
+                        Source="{x:Bind ViewModel.UserSadnessImage, Mode=OneWay}"
+                        />
+            <controls:ScoreControl
+                        x:Uid="Score_Sadness"
+                        Score="{x:Bind ViewModel.SadnessScore, Mode=OneWay}"
+                        Grid.Column="3"
+                        Grid.Row="1"
+                        Margin="0 0 -12 -12"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"/>
+
+            <!--Anger-->
+            <Image
+                        Grid.Column="1"
+                        Grid.Row="3"
+                        x:FieldModifier="public"
+                        x:Name="UserAngerResultImage"
+                        Style="{StaticResource UserCapturedImageStyle}"
+                        Source="{x:Bind ViewModel.UserAngerImage, Mode=OneWay}"
+                        />
+            <controls:ScoreControl
+                        x:Uid="Score_Anger"
+                        Score="{x:Bind ViewModel.AngerScore, Mode=OneWay}"
+                        Grid.Column="1"
+                        Grid.Row="3"
+                        Margin="0 0 -12 -12"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"/>
+
+            <!--Surprise-->
+            <Image
+                        Grid.Column="3"
+                        Grid.Row="3"
+                        x:FieldModifier="public"
+                        x:Name="UserSurpriseResultImage"
+                        Style="{StaticResource UserCapturedImageStyle}"
+                        Source="{x:Bind ViewModel.UserSurpriseImage, Mode=OneWay}"
+                        />
+            <controls:ScoreControl
+                        x:Uid="Score_Surprise"
+                        Score="{x:Bind ViewModel.SupriseScore, Mode=OneWay}"
+                        Grid.Column="3"
+                        Grid.Row="3"
+                        Margin="0 0 -12 -12"
+                        HorizontalAlignment="Stretch"
+                        VerticalAlignment="Stretch"/>
+        </Grid>
+
+        <Grid x:Name="accesoriesGrid">
+            <toolkitControls:DropShadowPanel
+                        Margin="159 13 0 0"
+                        VerticalAlignment="Top" HorizontalAlignment="Left"
+                        BlurRadius="{StaticResource InstructionsShadowBlurRadius}" ShadowOpacity="{StaticResource InstructionsShadowOpacity}" OffsetX="{StaticResource InstructionsShadowOffsetX}"  OffsetY="{StaticResource InstructionsShadowOffsetY}" Color="{StaticResource InstructionsShadowColor}">
+                <Image Source="ms-appx:///Assets/lunettes cinema.png" 
+                               Height="33" Width="77"/>
+            </toolkitControls:DropShadowPanel>
+            <toolkitControls:DropShadowPanel
+                        Margin="12 0 0 0"
+                        VerticalAlignment="Top" HorizontalAlignment="Left"
+                        BlurRadius="{StaticResource InstructionsShadowBlurRadius}" ShadowOpacity="{StaticResource InstructionsShadowOpacity}" 
+                        OffsetX="2"  OffsetY="2" 
+                        Color="{StaticResource InstructionsShadowColor}">
+                <Image Source="ms-appx:///Assets/lampes.png" 
+                                VerticalAlignment="Top" HorizontalAlignment="Left"
+                                Height="136" Width="52"/>
+            </toolkitControls:DropShadowPanel>
+            <toolkitControls:DropShadowPanel
+                        Margin="290 411 0 0"
+                        VerticalAlignment="Top" HorizontalAlignment="Left"
+                        BlurRadius="{StaticResource InstructionsShadowBlurRadius}" ShadowOpacity="{StaticResource InstructionsShadowOpacity}" OffsetX="{StaticResource InstructionsShadowOffsetX}"  OffsetY="{StaticResource InstructionsShadowOffsetY}" Color="{StaticResource InstructionsShadowColor}">
+                <Image Source="ms-appx:///Assets/pop corn 2.png" 
+                               Height="60"/>
+            </toolkitControls:DropShadowPanel>
+            <Image Source="ms-appx:///Assets/becomesoat.svg" 
+                            Margin="0 455 0 0"
+                            VerticalAlignment="Top" HorizontalAlignment="Center"
+                            Height="60"/>
+            <toolkitControls:DropShadowPanel
+                        VerticalAlignment="Top" HorizontalAlignment="Left"
+                        Margin="23 380 0 0"
+                        BlurRadius="{StaticResource InstructionsShadowBlurRadius}" ShadowOpacity="{StaticResource InstructionsShadowOpacity}" 
+                        OffsetX="2" OffsetY="2"
+                        Color="{StaticResource InstructionsShadowColor}">
+                <Image Source="ms-appx:///Assets/reward2.png" 
+                               VerticalAlignment="Top" HorizontalAlignment="Left"
+                               Height="152" Width="79" >
+                </Image>
+            </toolkitControls:DropShadowPanel>
+        </Grid>
+
+        <Grid x:Name="PhotoboothImageGrid"
+              x:FieldModifier="public">
+            <Image x:Name="PhotoboothImage"
+                           Source="{x:Bind ViewModel.ResultImage, Mode=TwoWay}"
+                           Stretch="Fill"/>
+        </Grid>
+    </Grid>
+</UserControl>
+

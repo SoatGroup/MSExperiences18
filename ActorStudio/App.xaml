@@ -38,6 +38,24 @@
         <x:String x:Key="AngerUpper">LA COLÈRE</x:String>
         <x:String x:Key="Anger">La Colère</x:String>
 
+        <Style x:Name="UserCapturedImageStyle" TargetType="Image">
+            <Style.Setters>
+                <Setter Property="Margin" Value="5"/>
+                <Setter Property="HorizontalAlignment" Value="Stretch"/>
+                <Setter Property="VerticalAlignment" Value="Stretch"/>
+                <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
+                <Setter Property="Stretch" Value="UniformToFill"/>
+            </Style.Setters>
+        </Style>
+
+        <Style x:Name="UserCapturedBorderStyle" TargetType="Border">
+            <Style.Setters>
+                <Setter Property="BorderThickness" Value="2"/>
+                <Setter Property="Margin" Value="15"/>
+                <Setter Property="BorderBrush" Value="{StaticResource UserCaptureBorderColor}"/>
+            </Style.Setters>
+        </Style>
+
     </Application.Resources>
 
 </Application>

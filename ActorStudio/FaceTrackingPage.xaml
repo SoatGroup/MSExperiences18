@@ -31,24 +31,6 @@
                 <LinearDoubleKeyFrame KeyTime="0:0:0.4" Value="0"/>
             </DoubleAnimationUsingKeyFrames>
         </Storyboard>
-
-        <Style x:Name="UserCapturedImageStyle" TargetType="Image">
-            <Style.Setters>
-                <Setter Property="Margin" Value="5"/>
-                <Setter Property="HorizontalAlignment" Value="Stretch"/>
-                <Setter Property="VerticalAlignment" Value="Stretch"/>
-                <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
-                <Setter Property="Stretch" Value="UniformToFill"/>
-            </Style.Setters>
-        </Style>
-
-        <Style x:Name="UserCapturedBorderStyle" TargetType="Border">
-            <Style.Setters>
-                <Setter Property="BorderThickness" Value="2"/>
-                <Setter Property="Margin" Value="15"/>
-                <Setter Property="BorderBrush" Value="{StaticResource UserCaptureBorderColor}"/>
-            </Style.Setters>
-        </Style>
     </Page.Resources>
 
     <Page.DataContext>
@@ -56,7 +38,10 @@
     </Page.DataContext>
 
     <Grid>
+        <!--Face Tracking control-->
         <faceControls:FaceTrackingControl x:Name="FaceTrackingControl"/>
+        
+        <!--Instructions-->
         <StackPanel
             VerticalAlignment="Stretch"
             HorizontalAlignment="Center">
@@ -125,6 +110,13 @@
               Visibility="{x:Bind GameStateMachineVM.IsEmotionsResultsVisible, Mode=OneWay}">
         </Grid>
 
+        <!--Emotions result Panel-->
+        <Viewbox x:Name="EmotionsResultsViewBox"
+                 Visibility="{x:Bind GameStateMachineVM.IsEmotionsResultsVisible, Mode=OneWay}"                 
+                  Margin="20">
+            <controls:EmotionsResultControl x:Name="ResultControl"/>
+        </Viewbox>
+
         <!--Emotions side-panel-->
         <Grid 
             Visibility="{x:Bind GameStateMachineVM.IsEmotionsCaptureVisible, Mode=OneWay}" >
@@ -179,6 +171,7 @@
             </Border>
         </Grid>
 
+        <!--Capture Timer-->
         <TextBlock Name="timerText"
                    Text="{x:Bind GameStateMachineVM.TimerDisplay, Mode=OneWay}"
                        Opacity=".5"
@@ -186,169 +179,6 @@
                        FontWeight="Bold"
                        HorizontalAlignment="Center" VerticalAlignment="Center"
                        Foreground="WhiteSmoke"/>
-
-        <!--Result panel-->
-        <Viewbox x:Name="EmotionsResultsViewBox"
-                 Visibility="{x:Bind GameStateMachineVM.IsEmotionsResultsVisible, Mode=OneWay}"                 
-                  Margin="20">
-            <Grid Height="560" Width="378"
-                  x:Name="EmotionsResultsGrid">
-
-                <Grid Background="White" >
-                    <!--Width="700"-->
-                    <!--Height="1036"-->
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="2*"/>
-                        <ColumnDefinition Width="10*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="10*"/>
-                        <ColumnDefinition Width="2*"/>
-                    </Grid.ColumnDefinitions>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="2*"/>
-                        <RowDefinition Height="10*"/>
-                        <RowDefinition Height="*"/>
-                        <RowDefinition Height="10*"/>
-                        <RowDefinition Height="2*"/>
-                        <RowDefinition Height="8*"/>
-                        <RowDefinition Height="2*"/>
-                    </Grid.RowDefinitions>
-
-                    <!--Hapiness-->
-                    <Image
-                        Grid.Column="1"
-                        Grid.Row="1"
-                        x:Name="UserHappinessResultImage"
-                        Style="{StaticResource UserCapturedImageStyle}"
-                        Source="{x:Bind GameStateMachineVM.UserHappinessImage, Mode=OneWay}"
-                        />
-                    <controls:ScoreControl
-                        x:Uid="Score_Hapiness"
-                        Score="{x:Bind GameStateMachineVM.HapinessScore, Mode=OneWay}"
-                        Grid.Column="1"
-                        Grid.Row="1"
-                        Margin="0 0 -12 -12"
-                        HorizontalAlignment="Stretch"
-                        VerticalAlignment="Stretch"/>
-
-                    <!--Sadness-->
-                    <Image
-                        Grid.Column="3"
-                        Grid.Row="1"
-                        x:Name="UserSadnessResultImage"
-                        Style="{StaticResource UserCapturedImageStyle}"
-                        Source="{x:Bind GameStateMachineVM.UserSadnessImage, Mode=OneWay}"
-                        />
-                    <controls:ScoreControl
-                        x:Uid="Score_Sadness"
-                        Score="{x:Bind GameStateMachineVM.SadnessScore, Mode=OneWay}"
-                        Grid.Column="3"
-                        Grid.Row="1"
-                        Margin="0 0 -12 -12"
-                        HorizontalAlignment="Stretch"
-                        VerticalAlignment="Stretch"/>
-
-                    <!--Anger-->
-                    <Image
-                        Grid.Column="1"
-                        Grid.Row="3"
-                        x:Name="UserAngerResultImage"
-                        Style="{StaticResource UserCapturedImageStyle}"
-                        Source="{x:Bind GameStateMachineVM.UserAngerImage, Mode=OneWay}"
-                        />
-                    <controls:ScoreControl
-                        x:Uid="Score_Anger"
-                        Score="{x:Bind GameStateMachineVM.AngerScore, Mode=OneWay}"
-                        Grid.Column="1"
-                        Grid.Row="3"
-                        Margin="0 0 -12 -12"
-                        HorizontalAlignment="Stretch"
-                        VerticalAlignment="Stretch"/>
-
-                    <!--Surprise-->
-                    <Image
-                        Grid.Column="3"
-                        Grid.Row="3"
-                        x:Name="UserSurpriseResultImage"
-                        Style="{StaticResource UserCapturedImageStyle}"
-                        Source="{x:Bind GameStateMachineVM.UserSurpriseImage, Mode=OneWay}"
-                        />
-                    <controls:ScoreControl
-                        x:Uid="Score_Surprise"
-                        Score="{x:Bind GameStateMachineVM.SupriseScore, Mode=OneWay}"
-                        Grid.Column="3"
-                        Grid.Row="3"
-                        Margin="0 0 -12 -12"
-                        HorizontalAlignment="Stretch"
-                        VerticalAlignment="Stretch"/>
-                </Grid>
-
-                <Grid x:Name="accesoriesGrid">
-                    <toolkitControls:DropShadowPanel
-                        Margin="159 13 0 0"
-                        VerticalAlignment="Top" HorizontalAlignment="Left"
-                        BlurRadius="{StaticResource InstructionsShadowBlurRadius}" ShadowOpacity="{StaticResource InstructionsShadowOpacity}" OffsetX="{StaticResource InstructionsShadowOffsetX}"  OffsetY="{StaticResource InstructionsShadowOffsetY}" Color="{StaticResource InstructionsShadowColor}">
-                        <Image Source="ms-appx:///Assets/lunettes cinema.png" 
-                               Height="33" Width="77"/>
-                    </toolkitControls:DropShadowPanel>
-                    <toolkitControls:DropShadowPanel
-                        Margin="12 0 0 0"
-                        VerticalAlignment="Top" HorizontalAlignment="Left"
-                        BlurRadius="{StaticResource InstructionsShadowBlurRadius}" ShadowOpacity="{StaticResource InstructionsShadowOpacity}" 
-                        OffsetX="2"  OffsetY="2" 
-                        Color="{StaticResource InstructionsShadowColor}">
-                        <Image Source="ms-appx:///Assets/lampes.png" 
-                                VerticalAlignment="Top" HorizontalAlignment="Left"
-                                Height="136" Width="52"/>
-                    </toolkitControls:DropShadowPanel>
-                    <!--<Image Source="ms-appx:///Assets/lampes.png" 
-                           Margin="12 0 0 0"
-                           VerticalAlignment="Top" HorizontalAlignment="Left"
-                           Height="136"/>-->
-                    <toolkitControls:DropShadowPanel
-                        Margin="290 411 0 0"
-                        VerticalAlignment="Top" HorizontalAlignment="Left"
-                        BlurRadius="{StaticResource InstructionsShadowBlurRadius}" ShadowOpacity="{StaticResource InstructionsShadowOpacity}" OffsetX="{StaticResource InstructionsShadowOffsetX}"  OffsetY="{StaticResource InstructionsShadowOffsetY}" Color="{StaticResource InstructionsShadowColor}">
-                        <Image Source="ms-appx:///Assets/pop corn 2.png" 
-                               Height="60"/>
-                    </toolkitControls:DropShadowPanel>
-                    <!--<Image Source="ms-appx:///Assets/tel lunette.png" 
-                            Margin="3 403 0 0"
-                            VerticalAlignment="Top" HorizontalAlignment="Left"
-                            Height="103" Width="107"/>-->
-                    <Image Source="ms-appx:///Assets/becomesoat.svg" 
-                            Margin="0 455 0 0"
-                            VerticalAlignment="Top" HorizontalAlignment="Center"
-                            Height="60"/>
-                    <toolkitControls:DropShadowPanel
-                        VerticalAlignment="Top" HorizontalAlignment="Left"
-                        Margin="23 380 0 0"
-                        BlurRadius="{StaticResource InstructionsShadowBlurRadius}" ShadowOpacity="{StaticResource InstructionsShadowOpacity}" 
-                        OffsetX="2" OffsetY="2"
-                        Color="{StaticResource InstructionsShadowColor}">
-                        <Image Source="ms-appx:///Assets/reward2.png" 
-                               VerticalAlignment="Top" HorizontalAlignment="Left"
-                               Height="152" Width="79" >
-                        </Image>
-                    </toolkitControls:DropShadowPanel>
-                    <!--<BitmapIcon UriSource="ms-appx:///Assets/reward.png" 
-                                Margin="23 380 0 0"
-                                Foreground="{StaticResource AccesoryRewardColor}"
-                                VerticalAlignment="Top" HorizontalAlignment="Left"
-                                Height="152" Width="79" RenderTransformOrigin="0.5,0.5" >
-                        <BitmapIcon.RenderTransform>
-                            <RotateTransform Angle="-12"/>
-                        </BitmapIcon.RenderTransform>
-                    </BitmapIcon>-->
-                </Grid>
-
-                <Grid x:Name="PhotoboothImageGrid">
-                    <Image x:Name="PhotoboothImage"
-                           Source="{x:Bind GameStateMachineVM.ResultImage, Mode=TwoWay}"
-                           Stretch="Fill"/>
-                </Grid>
-            </Grid>
-        </Viewbox >
 
         <!--Flash-->
         <Grid Grid.Row="0">
