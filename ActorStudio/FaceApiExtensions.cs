@@ -174,10 +174,6 @@ namespace ActorStudio
                         return false;
                     }
                 }
-                catch (Exception e)
-                {
-                    throw;
-                }
             } while (rateLimitExceeded == true);
 
             return true;
@@ -227,7 +223,7 @@ namespace ActorStudio
                     }
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 return null;
             }

@@ -104,10 +104,6 @@ namespace FaceApiProxy
                 // just ignore this face
                 return null;
             }
-            catch (Exception e)
-            {
-                throw;
-            }
         }
         #endregion Person
 
@@ -200,10 +196,6 @@ namespace FaceApiProxy
                 Console.WriteLine(e);
                 // just ignore this face
                 return null;
-            }
-            catch (Exception e)
-            {
-                throw;
             }
         }
 

@@ -592,7 +592,7 @@ namespace ActorStudio
                 var attributes = await FaceApiHelper.DetectEmotionsAsync(_faceClient, photoStream.AsStream(), requiredFaceAttributes);
                 return attributes?.Emotion;
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 // Hide exception and return null
                 return null;
