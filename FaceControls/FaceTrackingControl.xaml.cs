@@ -435,7 +435,7 @@ namespace FaceControls
         public async Task CaptureFaceToFileAsync(StorageFile photoFile, BitmapBounds faceBounds)
         {
             // Get video frame
-            int height = 480;
+            const int height = 480;
             double scale = height / (double)_previewProperties.Height;
             using (VideoFrame videoFrame = new VideoFrame(BitmapPixelFormat.Bgra8, (int)(_previewProperties.Width * scale), height))
             //using (VideoFrame videoFrame = new VideoFrame(BitmapPixelFormat.Bgra8, (int)previewProperties.Width, (int)previewProperties.Height))
