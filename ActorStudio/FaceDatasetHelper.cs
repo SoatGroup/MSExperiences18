@@ -2,7 +2,6 @@
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Windows.Storage;
 using Windows.Storage.Streams;
 using FaceApiProxy;
 using Microsoft.ProjectOxford.Face;
@@ -23,7 +22,7 @@ namespace ActorStudio
                 }
 
                 // Due to legal limitations, Face API does not support images retrieval in any circumstance currently.You need to store the images and maintain the relationship between face ids and images by yourself.
-                var personsFolder = await KnownFolders.PicturesLibrary.GetFolderAsync(groupImagesFolder);
+                var personsFolder = await PicturesHelper.GetPersonFolderAsync(groupImagesFolder);
                 var dataSet = await faceClient.ListPersonsAsync(personGroupId);
 
                 var matches =

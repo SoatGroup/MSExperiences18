@@ -9,7 +9,6 @@ using Windows.ApplicationModel.Resources;
 using Windows.Graphics.Imaging;
 using Windows.Media.Core;
 using Windows.Media.FaceAnalysis;
-using Windows.Storage;
 using Windows.Storage.Streams;
 using Windows.UI.Core;
 using Windows.UI.Xaml.Media;
@@ -141,6 +140,7 @@ namespace ActorStudio
                             DisplayResultsAsync();
                             break;
                         case GameState.Idle:
+                            PicturesHelper.CleanFaceCapturesAsync();
                             CurrentState = GameState.FacesDetection;
                             break;
                         default:
@@ -453,9 +453,7 @@ namespace ActorStudio
                     if (NetworkHelper.Instance.ConnectionInformation.IsInternetAvailable)
                     {
                         //store the captured image
-                        var photoFile = await KnownFolders.PicturesLibrary.CreateFileAsync(
-                            Constants.FaceCatpureFileName + '.' + Constants.FaceCatpureFileExtension, 
-                            CreationCollisionOption.GenerateUniqueName);
+                        var photoFile = await PicturesHelper.CreatePictureAsync();
                         await _faceTrackingControl.CaptureFaceToFileAsync(photoFile, facebox);
                         var fileStream = await photoFile.OpenReadAsync();
                         var streamCompare = fileStream.CloneStream();
@@ -526,13 +524,13 @@ namespace ActorStudio
             // Capture image
             ImageCaptured?.Invoke(this, null);
             // Store the captured image
-            BitmapImage originalBitmap = new BitmapImage();
+            var originalBitmap = new BitmapImage();
 
             string filePath;
 
             await _dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
             {
-                StorageFile photoFile = await KnownFolders.PicturesLibrary.CreateFileAsync(Constants.FaceCatpureFileName, CreationCollisionOption.GenerateUniqueName);
+                var photoFile = await PicturesHelper.CreatePictureAsync();
                 await _faceTrackingControl.CaptureFaceToFileAsync(photoFile);
                 var fileStream = await photoFile.OpenReadAsync();
                 var imageStream = fileStream.CloneStream();
