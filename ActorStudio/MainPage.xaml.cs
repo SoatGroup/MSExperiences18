@@ -26,9 +26,14 @@ namespace ActorStudio
             {
                 navSplitView.IsPaneOpen = !navSplitView.IsPaneOpen;
             }
-            if (((ListViewItem) e.AddedItems[0]).Tag.ToString().Equals("1"))
+            else if (((ListViewItem) e.AddedItems[0]).Tag.ToString().Equals("1"))
             {
                 frmPages.Navigate(typeof(FaceTrackingPage));
+                navSplitView.IsPaneOpen = false;
+            }
+            else if (((ListViewItem)e.AddedItems[0]).Tag.ToString().Equals("2"))
+            {
+                frmPages.Navigate(typeof(SettingsPage));
                 navSplitView.IsPaneOpen = false;
             }
         }

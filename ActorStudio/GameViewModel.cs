@@ -320,7 +320,7 @@ namespace ActorStudio
         public GameViewModel()
         {
             ResourceLoader = new ResourceLoader();
-            _faceClient = new FaceServiceClient(Constants.AzureFaceApiKey, Constants.AzureFaceApiRoot);
+            _faceClient = new FaceServiceClient(SettingsHelper.Instance.FaceApiKey, $"https://{SettingsHelper.Instance.FaceApiKeyRegion}.api.cognitive.microsoft.com/face/v1.0");
         }
 
         internal async void StartAsync(FaceTrackingControl faceTrackingControl, CoreDispatcher dispatcher)
@@ -335,7 +335,7 @@ namespace ActorStudio
             {
                 try
                 {
-                    await _faceTrackingControl.InitCameraAsync(Constants.CameraIndex, Constants.ScreenRatio);
+                    await _faceTrackingControl.InitCameraAsync(SettingsHelper.Instance.CameraName, Constants.ScreenRatio);
 
                     CurrentState = GameState.FacesDetection;
                 }
@@ -464,7 +464,7 @@ namespace ActorStudio
                         IsFaceMatchingRunning = true;
 
                         var streamCheck = fileStream.CloneStream().AsStream();
-                        var match = await FaceDatasetHelper.CheckGroupAsync(_faceClient, streamCheck, Constants.AzureFacesListId, Constants.AzureCelebFacesGroupFolder);
+                        var match = await FaceDatasetHelper.CheckGroupAsync(_faceClient, streamCheck, SettingsHelper.Instance.FaceListId, Constants.AzureCelebFacesGroupFolder);
                         await StartFaceRecognizedAsync(match);
                     }
                     else

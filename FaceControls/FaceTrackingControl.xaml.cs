@@ -74,7 +74,7 @@ namespace FaceControls
             _smileyNeutral = new BitmapIcon {Foreground = _smileyColor};
         }
 
-        public async Task InitCameraAsync(int cameraIndex, double screenRatio)
+        public async Task InitCameraAsync(string cameraName, double screenRatio)
         {
             try
             {
@@ -82,16 +82,19 @@ namespace FaceControls
 
                 Status = "Initializing camera to capture audio and video...";
 
-                DeviceInformationCollection devices = await DeviceInformation.FindAllAsync(DeviceClass.VideoCapture);
-
-                // Use default initialization
                 MediaCapture = new MediaCapture();
-                MediaCaptureInitializationSettings settings = new MediaCaptureInitializationSettings
+                MediaCaptureInitializationSettings settings = new MediaCaptureInitializationSettings()
                 {
-                    StreamingCaptureMode = StreamingCaptureMode.Video,
-                    VideoDeviceId = devices[cameraIndex].Id
-
+                    StreamingCaptureMode = StreamingCaptureMode.Video
                 };
+
+                var allCameras = await DeviceInformation.FindAllAsync(DeviceClass.VideoCapture);
+                var selectedCamera = allCameras.FirstOrDefault(c => c.Name == cameraName);
+                if (selectedCamera != null)
+                {
+                    settings.VideoDeviceId = selectedCamera.Id;
+                }
+                
                 await MediaCapture.InitializeAsync(settings);
 
                 // Set callbacks for failure and recording limit exceeded
