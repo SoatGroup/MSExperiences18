@@ -52,7 +52,7 @@ namespace FaceControls
 
         public string Status { get; set; }
         public bool IsCheckSmileEnabled { get; set; }
-        public MediaCapture MediaCapture { get; private set; }
+        public MediaCapture VideoCapture { get; private set; }
         /// <summary>
         /// Occurs when a face is detected. See FaceDetectedEventArgs
         /// </summary>
@@ -82,7 +82,7 @@ namespace FaceControls
 
                 Status = "Initializing camera to capture audio and video...";
 
-                MediaCapture = new MediaCapture();
+                VideoCapture = new MediaCapture();
                 MediaCaptureInitializationSettings settings = new MediaCaptureInitializationSettings()
                 {
                     StreamingCaptureMode = StreamingCaptureMode.Video
@@ -95,29 +95,29 @@ namespace FaceControls
                     settings.VideoDeviceId = selectedCamera.Id;
                 }
                 
-                await MediaCapture.InitializeAsync(settings);
+                await VideoCapture.InitializeAsync(settings);
 
                 // Set callbacks for failure and recording limit exceeded
                 Status = "Device successfully initialized for video recording!";
-                MediaCapture.Failed += mediaCapture_Failed;
+                VideoCapture.Failed += mediaCapture_Failed;
 
                 // Start Preview                
-                PreviewControl.Source = MediaCapture;
+                PreviewControl.Source = VideoCapture;
                 PreviewControl.FlowDirection = _mirroringPreview ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
                 // Also mirror the canvas if the preview is being mirrored
                 FacesCanvas.FlowDirection = _mirroringPreview ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
 
 
                 // Query all properties of the specified stream type 
-                var props = MediaCapture.VideoDeviceController.GetAvailableMediaStreamProperties(MediaStreamType.VideoPreview);
+                var props = VideoCapture.VideoDeviceController.GetAvailableMediaStreamProperties(MediaStreamType.VideoPreview);
                 IEnumerable<StreamResolution> allStreamProperties = props.Select(x => new StreamResolution(x));
                 // Order them by resolution then frame rate
                 allStreamProperties = allStreamProperties.Where(p => p.AspectRatio == screenRatio).OrderByDescending(x => x.FrameRate).ThenByDescending(x => x.Height * x.Width);
-                await MediaCapture.VideoDeviceController.SetMediaStreamPropertiesAsync(MediaStreamType.VideoPreview, allStreamProperties.First().EncodingProperties);
+                await VideoCapture.VideoDeviceController.SetMediaStreamPropertiesAsync(MediaStreamType.VideoPreview, allStreamProperties.First().EncodingProperties);
 
 
-                await MediaCapture.StartPreviewAsync();
-                _previewProperties = MediaCapture.VideoDeviceController.GetMediaStreamProperties(MediaStreamType.VideoPreview) as VideoEncodingProperties;
+                await VideoCapture.StartPreviewAsync();
+                _previewProperties = VideoCapture.VideoDeviceController.GetMediaStreamProperties(MediaStreamType.VideoPreview) as VideoEncodingProperties;
 
                 // Initialize the preview to the current orientation
                 if (_previewProperties != null)
@@ -164,14 +164,19 @@ namespace FaceControls
         {
             // Create the definition, which will contain some initialization settings
             var definition = new FaceDetectionEffectDefinition();
+            
             // To ensure preview smoothness, do not delay incoming samples
             definition.SynchronousDetectionEnabled = false;
+            
             // In this scenario, choose detection speed over accuracy
             definition.DetectionMode = FaceDetectionMode.HighPerformance;
+            
             // Add the effect to the preview stream
-            _faceDetectionEffect = (FaceDetectionEffect)await MediaCapture.AddVideoEffectAsync(definition, MediaStreamType.VideoPreview);
+            _faceDetectionEffect = (FaceDetectionEffect)await VideoCapture.AddVideoEffectAsync(definition, MediaStreamType.VideoPreview);
+
             // Choose the shortest interval between detection events
             _faceDetectionEffect.DesiredDetectionInterval = TimeSpan.FromMilliseconds(33);
+
             // Register for face detection events
             _faceDetectionEffect.FaceDetected += FaceDetectionEffect_FaceDetected;
 
@@ -192,7 +197,7 @@ namespace FaceControls
                         Height = biggestFace.FaceBox.Height,
                         Width = biggestFace.FaceBox.Width
                     };
-                    // Check if face is not too big
+                    // Check if face is not too big for face bounding box extrapolation
                     if (false == TryExtendFaceBounds(
                             (int)_previewProperties.Width, (int)_previewProperties.Height,
                             Constants.FaceBoxRatio, ref faceBounds))
@@ -233,18 +238,18 @@ namespace FaceControls
 
         private async void Cleanup()
         {
-            if (MediaCapture != null)
+            if (VideoCapture != null)
             {
                 // Cleanup MediaCapture object
                 if (_isPreviewing)
                 {
-                    await MediaCapture.StopPreviewAsync();
+                    await VideoCapture.StopPreviewAsync();
                     PreviewControl.Source = null;
                     _isPreviewing = false;
                 }
                 _faceDetectionEffect = null;
-                MediaCapture.Dispose();
-                MediaCapture = null;
+                VideoCapture.Dispose();
+                VideoCapture = null;
             }
         }
 
@@ -301,11 +306,11 @@ namespace FaceControls
                     _lastSmileCheck = DateTime.Now;
 
                     var requiedFaceAttributes = new[] { FaceAttributeType.Smile };
-                    if (MediaCapture.VideoDeviceController.GetMediaStreamProperties(MediaStreamType.VideoPreview) is VideoEncodingProperties previewProperties)
+                    if (VideoCapture.VideoDeviceController.GetMediaStreamProperties(MediaStreamType.VideoPreview) is VideoEncodingProperties previewProperties)
                     {
                         double scale = 480d / previewProperties.Height;
                         VideoFrame videoFrame = new VideoFrame(BitmapPixelFormat.Bgra8, (int)(previewProperties.Width * scale), 480);
-                        using (var frame = await MediaCapture.GetPreviewFrameAsync(videoFrame))
+                        using (var frame = await VideoCapture.GetPreviewFrameAsync(videoFrame))
                         {
                             if (frame.SoftwareBitmap != null)
                             {
@@ -443,7 +448,7 @@ namespace FaceControls
             using (VideoFrame videoFrame = new VideoFrame(BitmapPixelFormat.Bgra8, (int)(_previewProperties.Width * scale), height))
             //using (VideoFrame videoFrame = new VideoFrame(BitmapPixelFormat.Bgra8, (int)previewProperties.Width, (int)previewProperties.Height))
             {
-                await MediaCapture.GetPreviewFrameAsync(videoFrame);
+                await VideoCapture.GetPreviewFrameAsync(videoFrame);
 
                 faceBounds = GetFaceBoundsFromFrame(faceBounds, 1);
                 TryExtendFaceBounds(
@@ -492,10 +497,10 @@ namespace FaceControls
 
             // Capture gray image for face detection
             var videoFrame = new VideoFrame(BitmapPixelFormat.Bgra8, (int)(_previewProperties.Width * scale), height);
-            var frame = await MediaCapture.GetPreviewFrameAsync(videoFrame);
+            var frame = await VideoCapture.GetPreviewFrameAsync(videoFrame);
             //Capture color image for saving            
             var grayVideoFrame = new VideoFrame(BitmapPixelFormat.Gray8, (int)(_previewProperties.Width * scale), height);
-            await MediaCapture.GetPreviewFrameAsync(grayVideoFrame);
+            await VideoCapture.GetPreviewFrameAsync(grayVideoFrame);
             // Detect faces
             IList<DetectedFace> faces = null;
             if (FaceDetector.IsBitmapPixelFormatSupported(grayVideoFrame.SoftwareBitmap.BitmapPixelFormat))
